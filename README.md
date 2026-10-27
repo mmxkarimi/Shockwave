@@ -7,7 +7,7 @@ three seek-bar styles and first-class Persian / RTL support.
 
 > **Status: pre-release `v0.1.0`.** It builds and passes its unit tests, but so far it has only been exercised through JVM tests and Robolectric renders:
 > it has **not been verified on a physical device or emulator yet**. See [Known limitations](#known-limitations).
-> Persian version: [README.fa.md](README.fa.md) - Changes: [CHANGELOG.md](CHANGELOG.md)
+> Changes: [CHANGELOG.md](CHANGELOG.md)
 
 - Package `com.mhrsdev.musicplayer`, minSdk 26 (Android 8.0), target/compile SDK 37
 - **Java only** (no Kotlin), XML layouts + custom Views, MVVM, framework SQLite (no Room), Media3
@@ -208,8 +208,8 @@ docs/                              ARCHITECTURE, DESIGN, STATUS, screenshots, de
 ## Contributing / project rules
 
 Java only (`git ls-files | grep -E '\.kts?$'` must print nothing; Gradle files are Groovy), MVVM, no Room (framework SQLite, SQL only
-in query classes), clean packages, Gradle 9.0.0. Battery and RAM use are hard requirements. Read `CLAUDE.md`, `docs/STATUS.md` and
-`docs/ARCHITECTURE.md` first. Work on a branch; `main` is the delivered state.
+in query classes), clean packages, Gradle 9.0.0. Battery and RAM use are hard requirements. Read `docs/STATUS.md` and `docs/ARCHITECTURE.md`
+first. Work on a branch; `main` is the delivered state.
 
 ## Known limitations
 
