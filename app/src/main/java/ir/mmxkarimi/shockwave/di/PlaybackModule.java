@@ -14,7 +14,8 @@ public final class PlaybackModule {
 
     /**
      * @param playCountListener called once per real listen of a track, e.g. {@code library::recordPlay}
-     * @param nextTrackListener called while playing whenever the next queued track changes, e.g. waveform prefetch
+     * @param nextTrackListener optional: called while playing whenever the next queued track changes (null when
+     *                           nothing needs the hint)
      */
     public static PlayerController createController(Context context, @Nullable PlayCountListener playCountListener,
             @Nullable Consumer<Track> nextTrackListener) {

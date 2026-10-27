@@ -27,12 +27,10 @@ public class PrefsSettingsStoreTest {
         PrefsSettingsStore ui = new PrefsSettingsStore(data);
 
         ui.setTheme(SettingsStore.Theme.BLACK);
-        ui.setSeekStyle(SettingsStore.SeekStyle.BARS);
         ui.setOnlineLyrics(false);
         ui.setSleepDefaultMinutes(0);
         ui.setBatterySaver(true);
         assertEquals(ir.mmxkarimi.shockwave.data.settings.ThemeMode.BLACK, data.theme().getValue());
-        assertEquals(ir.mmxkarimi.shockwave.data.settings.SeekBarStyle.BARS, data.seekBarStyle().getValue());
         assertFalse(data.lyricsOnline().getValue());
         assertEquals(BatterySaverMode.ON, data.batterySaver().getValue());
         assertTrue(ui.isBatterySaver());

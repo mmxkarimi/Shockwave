@@ -21,14 +21,13 @@ import ir.mmxkarimi.shockwave.ui.theme.MotionPolicy;
 import ir.mmxkarimi.shockwave.ui.theme.Tokens;
 
 /**
- * Play/pause button whose container morphs from a squircle (paused) to a 10-lobe cookie (playing), with the
- * play triangle crossfading to pause bars in the first 40% of the morph. While playing it turns slowly
- * (1 turn / 24 s, 20 fps, only when visible and decorative motion is allowed). Buffering shows a small arc.
+ * Play/pause button whose container morphs from a circle (paused) to a 10-lobe cookie (playing), with the
+ * play triangle crossfading to pause bars in the first 40% of the morph. The shape only changes with the state
+ * (no continuous rotation). Buffering shows a small arc.
  * Square: size it with layout params (e.g. 88 dp in the player, 48 dp in the mini-player).
  */
 public class MorphPlayPauseView extends View {
     private static final int POINTS = 120;
-    private static final long SPIN_FRAME_MS = 50L;
 
     private final Paint containerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint iconPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -42,10 +41,7 @@ public class MorphPlayPauseView extends View {
 
     private boolean playing;
     private boolean buffering;
-    private float morph; // 0 squircle/play .. 1 cookie/pause
-    private float rotationDeg;
-    private long lastFrame;
-    private boolean visibleToUser;
+    private float morph; // 0 circle/play .. 1 cookie/pause
     private boolean motionAllowed = true;
     @ColorInt private int containerColor;
     @ColorInt private int iconColor;
@@ -88,7 +84,6 @@ public class MorphPlayPauseView extends View {
         } else {
             setMorphNow(playing ? 1f : 0f);
         }
-        lastFrame = 0;
         invalidate();
     }
 
@@ -142,13 +137,6 @@ public class MorphPlayPauseView extends View {
         arcRect.set(cx - u * 1.3f, cy - u * 1.3f, cx + u * 1.3f, cy + u * 1.3f);
     }
 
-    @Override public void onVisibilityAggregated(boolean isVisible) {
-        super.onVisibilityAggregated(isVisible);
-        visibleToUser = isVisible;
-        lastFrame = 0;
-        if (isVisible) invalidate();
-    }
-
     @Override protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         motionAllowed = MotionPolicy.decorativeMotionEnabled(getContext());
@@ -161,17 +149,13 @@ public class MorphPlayPauseView extends View {
 
     @Override protected void onDraw(Canvas canvas) {
         long now = SystemClock.uptimeMillis();
-        boolean spin = playing && motionAllowed && visibleToUser && isEnabled();
-        if (spin && lastFrame != 0) rotationDeg = (rotationDeg + 360f * (now - lastFrame) / Tokens.COOKIE_TURN_MS) % 360f;
-        lastFrame = now;
 
         float w = getWidth(), h = getHeight(), cx = w / 2f, cy = h / 2f;
         float r = Math.min(w, h) / 2f;
-        double rot = Math.toRadians(rotationDeg);
         shape.rewind();
         for (int i = 0; i <= POINTS; i++) {
             double t = WaveMath.TWO_PI * i / POINTS;
-            float rr = r * ShapeMath.radius(t - rot, morph);
+            float rr = r * ShapeMath.radius(t, morph);
             float x = cx + rr * (float) Math.cos(t), y = cy + rr * (float) Math.sin(t);
             if (i == 0) shape.moveTo(x, y); else shape.lineTo(x, y);
         }
@@ -185,7 +169,7 @@ public class MorphPlayPauseView extends View {
             arcPaint.setAlpha(iconAlphaBase);
             float sweepStart = motionAllowed ? (now - origin) % 1000L * 0.36f : 0f;
             canvas.drawArc(arcRect, sweepStart, 270f, false, arcPaint);
-            if (motionAllowed && visibleToUser) postInvalidateOnAnimation();
+            if (motionAllowed) postInvalidateOnAnimation();
             return;
         }
         // Icon crossfade happens in the first 40% of the morph.
@@ -199,7 +183,6 @@ public class MorphPlayPauseView extends View {
             iconPaint.setAlpha(Math.round(iconAlphaBase * k));
             canvas.drawPath(pauseIcon, iconPaint);
         }
-        if (spin && !morphAnim.isRunning()) postInvalidateDelayed(SPIN_FRAME_MS);
     }
 
     @Override public boolean onTouchEvent(MotionEvent e) {

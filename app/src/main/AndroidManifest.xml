@@ -29,6 +29,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Long-press actions: Play, Recently added, Favorites (res/xml/shortcuts.xml). -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <!-- Exported without a permission on purpose: Media3 session clients (system UI, Bluetooth, Auto) bind to it. -->

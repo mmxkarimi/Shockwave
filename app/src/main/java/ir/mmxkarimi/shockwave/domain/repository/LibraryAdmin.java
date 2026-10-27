@@ -17,9 +17,6 @@ public interface LibraryAdmin {
     /** Manual rescan. {@code callback} (may be null) gets the result on the main thread; FAILED if one is already running. */
     void rescan(@Nullable Callback<ScanResult> callback);
 
-    /** Scans only if the device's media changed since the last scan (or never scanned). Needs the audio permission. */
-    void scanIfStale();
-
     void renamePlaylist(String playlistId, String name);
 
     void deletePlaylist(String playlistId);

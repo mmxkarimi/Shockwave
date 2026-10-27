@@ -9,8 +9,8 @@ import androidx.lifecycle.ViewModelProvider;
 /** Settings screen state. Each setter persists to the store and publishes a new immutable snapshot. */
 public final class SettingsViewModel extends ViewModel {
 
-    public record State(SettingsStore.Theme theme, boolean artworkColors, SettingsStore.SeekStyle seekStyle,
-            String language, boolean onlineLyrics, int sleepDefaultMinutes, boolean batterySaver) { }
+    public record State(SettingsStore.Theme theme, boolean artworkColors, String language, boolean onlineLyrics,
+            int sleepDefaultMinutes, boolean batterySaver) { }
 
     /** Sleep timer presets in minutes; 0 = end of track. */
     public static final int[] SLEEP_PRESETS = {15, 30, 45, 60, 0};
@@ -24,7 +24,7 @@ public final class SettingsViewModel extends ViewModel {
     }
 
     private void publish() {
-        state.setValue(new State(store.getTheme(), store.isArtworkColors(), store.getSeekStyle(), store.getLanguage(),
+        state.setValue(new State(store.getTheme(), store.isArtworkColors(), store.getLanguage(),
                 store.isOnlineLyrics(), store.getSleepDefaultMinutes(), store.isBatterySaver()));
     }
 
@@ -33,8 +33,6 @@ public final class SettingsViewModel extends ViewModel {
     public void setTheme(SettingsStore.Theme t) { store.setTheme(t); publish(); }
 
     public void setArtworkColors(boolean on) { store.setArtworkColors(on); publish(); }
-
-    public void setSeekStyle(SettingsStore.SeekStyle s) { store.setSeekStyle(s); publish(); }
 
     public void setLanguage(String tag) { store.setLanguage(tag); publish(); }
 

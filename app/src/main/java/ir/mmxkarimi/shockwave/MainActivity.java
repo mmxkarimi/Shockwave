@@ -1,6 +1,7 @@
 package ir.mmxkarimi.shockwave;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,8 +20,11 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import ir.mmxkarimi.shockwave.databinding.ActivityMainBinding;
+import ir.mmxkarimi.shockwave.di.AppContainer;
 import ir.mmxkarimi.shockwave.domain.model.PlaybackState;
 import ir.mmxkarimi.shockwave.domain.model.Track;
 import ir.mmxkarimi.shockwave.ui.home.HomeFragment;
@@ -40,6 +44,7 @@ import ir.mmxkarimi.shockwave.ui.settings.ThemeApplier;
 import ir.mmxkarimi.shockwave.ui.theme.ThemeController;
 import ir.mmxkarimi.shockwave.ui.widget.FloatingNavView;
 import ir.mmxkarimi.shockwave.ui.widget.MiniPlayerView;
+import java.util.List;
 
 /**
  * Single-activity shell: top-level tabs in {@code screen_container}, detail screens pushed on the back stack,
@@ -47,6 +52,11 @@ import ir.mmxkarimi.shockwave.ui.widget.MiniPlayerView;
  */
 public class MainActivity extends AppCompatActivity
         implements PlayerNavigator, ScreenNavigator, PermissionFragment.Host {
+
+    /** Launcher shortcut actions (res/xml/shortcuts.xml); each opens the app at the right place. */
+    private static final String ACTION_SHORTCUT_PLAY = "ir.mmxkarimi.shockwave.SHORTCUT_PLAY";
+    private static final String ACTION_SHORTCUT_RECENT = "ir.mmxkarimi.shockwave.SHORTCUT_RECENT";
+    private static final String ACTION_SHORTCUT_FAVORITES = "ir.mmxkarimi.shockwave.SHORTCUT_FAVORITES";
 
     /** T4's screens, resolved by name so the shell compiles before (and independently of) them. */
     private static final String PLAYER_FRAGMENT = "ir.mmxkarimi.shockwave.ui.player.PlayerFragment";
@@ -88,7 +98,7 @@ public class MainActivity extends AppCompatActivity
 
         if (savedInstanceState == null) {
             if (AudioPermission.granted(this) || PermissionPrefs.skipped(this)) {
-                showTab(Tab.HOME);
+                if (!applyShortcut(getIntent())) showTab(Tab.HOME);
             } else {
                 permissionFlow = true;
                 getSupportFragmentManager().beginTransaction()
@@ -109,11 +119,70 @@ public class MainActivity extends AppCompatActivity
         out.putInt(STATE_TAB, shell.getTab().getValue().ordinal());
     }
 
+    @Override protected void onNewIntent(@Nullable Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        applyShortcut(intent);
+    }
+
+    /**
+     * One of the launcher shortcuts (res/xml/shortcuts.xml): open Recently added / Favorites, or start playback.
+     * The action is consumed, so a configuration change or process restore never replays it.
+     *
+     * @return true when the intent was a shortcut and has been handled
+     */
+    private boolean applyShortcut(@Nullable Intent intent) {
+        if (intent == null || permissionFlow) return false;
+        String action = intent.getAction();
+        if (action == null) return false;
+        switch (action) {
+            case ACTION_SHORTCUT_RECENT -> {
+                intent.setAction(null);
+                openTab(Tab.LIBRARY);
+                openTrackList(TrackList.RECENT, null);
+                return true;
+            }
+            case ACTION_SHORTCUT_FAVORITES -> {
+                intent.setAction(null);
+                openTab(Tab.LIBRARY);
+                openTrackList(TrackList.LIKED, null);
+                return true;
+            }
+            case ACTION_SHORTCUT_PLAY -> {
+                intent.setAction(null);
+                openTab(Tab.HOME);
+                playFromShortcut();
+                return true;
+            }
+            default -> { }
+        }
+        return false;
+    }
+
+    /** Resume the current queue; with nothing queued, start from the most recently added songs. */
+    private void playFromShortcut() {
+        AppContainer c = ((ShockwaveApp) getApplication()).getContainer();
+        PlaybackState state = c.player.getState().getValue();
+        if (state != null && state.currentTrack() != null) {
+            c.player.resume();
+            return;
+        }
+        LiveData<List<Track>> recent = c.library.getRecentlySaved();
+        recent.observe(this, new Observer<List<Track>>() {
+            @Override public void onChanged(List<Track> tracks) {
+                if (tracks == null || tracks.isEmpty()) return; // the launch scan may still be running
+                recent.removeObserver(this);
+                c.player.play(tracks, 0, getString(R.string.library_recently_saved));
+            }
+        });
+    }
+
     private void applyInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
             binding.screenContainer.setPadding(bars.left, bars.top, bars.right, 0);
-            int gap = Math.round(12 * getResources().getDisplayMetrics().density);
+            // Keep the mini-player + nav pill clearly above the screen edge, even with no nav inset reported.
+            int gap = Math.round(24 * getResources().getDisplayMetrics().density);
             binding.chrome.setPadding(bars.left, 0, bars.right, bars.bottom + gap);
             return insets;
         });

@@ -15,7 +15,6 @@ public class SettingsViewModelTest {
     static final class MemoryStore implements SettingsStore {
         Theme theme = Theme.SYSTEM;
         boolean artwork = true;
-        SeekStyle seek = SeekStyle.WAVY;
         String lang = LANG_SYSTEM;
         boolean lyrics = true;
         int sleep = 30;
@@ -25,8 +24,6 @@ public class SettingsViewModelTest {
         @Override public void setTheme(Theme t) { theme = t; }
         @Override public boolean isArtworkColors() { return artwork; }
         @Override public void setArtworkColors(boolean on) { artwork = on; }
-        @Override public SeekStyle getSeekStyle() { return seek; }
-        @Override public void setSeekStyle(SeekStyle s) { seek = s; }
         @Override public String getLanguage() { return lang; }
         @Override public void setLanguage(String tag) { lang = tag; }
         @Override public boolean isOnlineLyrics() { return lyrics; }
@@ -41,14 +38,12 @@ public class SettingsViewModelTest {
         MemoryStore store = new MemoryStore();
         SettingsViewModel vm = new SettingsViewModel(store);
         vm.setTheme(SettingsStore.Theme.BLACK);
-        vm.setSeekStyle(SettingsStore.SeekStyle.BARS);
         vm.setLanguage("fa");
         vm.setBatterySaver(true);
         vm.setArtworkColors(false);
         vm.setSleepDefault(0);
         SettingsViewModel.State s = vm.getState().getValue();
         assertEquals(SettingsStore.Theme.BLACK, s.theme());
-        assertEquals(SettingsStore.SeekStyle.BARS, s.seekStyle());
         assertEquals("fa", s.language());
         assertTrue(s.batterySaver());
         assertFalse(s.artworkColors());

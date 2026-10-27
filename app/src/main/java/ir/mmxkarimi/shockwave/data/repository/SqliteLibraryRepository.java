@@ -224,13 +224,6 @@ public final class SqliteLibraryRepository implements LibraryRepository, Library
         return scanning;
     }
 
-    /** App-start hook: scans only if MediaStore changed since the last scan (or never scanned). Needs the permission. */
-    @Override public void scanIfStale() {
-        io.execute(() -> {
-            if (scanner.isStale()) scanNow(null);
-        });
-    }
-
     /** Manual rescan. {@code callback} (may be null) gets the result on the main thread; FAILED if one is already running. */
     @Override public void rescan(@Nullable Callback<ScanResult> callback) {
         io.execute(() -> scanNow(callback));

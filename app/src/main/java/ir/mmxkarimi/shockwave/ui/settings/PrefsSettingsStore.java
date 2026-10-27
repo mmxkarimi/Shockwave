@@ -2,7 +2,6 @@ package ir.mmxkarimi.shockwave.ui.settings;
 
 import android.content.Context;
 import ir.mmxkarimi.shockwave.data.settings.BatterySaverMode;
-import ir.mmxkarimi.shockwave.data.settings.SeekBarStyle;
 import ir.mmxkarimi.shockwave.data.settings.ThemeMode;
 import ir.mmxkarimi.shockwave.ui.nav.Screens;
 
@@ -29,10 +28,6 @@ public final class PrefsSettingsStore implements SettingsStore {
     @Override public boolean isArtworkColors() { return data.artworkColors().getValue(); }
 
     @Override public void setArtworkColors(boolean on) { data.setArtworkColors(on); }
-
-    @Override public SeekStyle getSeekStyle() { return SeekStyle.valueOf(data.seekBarStyle().getValue().name()); }
-
-    @Override public void setSeekStyle(SeekStyle s) { data.setSeekBarStyle(SeekBarStyle.valueOf(s.name())); }
 
     @Override public String getLanguage() { return data.language().getValue(); }
 

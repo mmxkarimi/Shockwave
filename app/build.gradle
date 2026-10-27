@@ -16,7 +16,7 @@ android {
         minSdk 26
         targetSdk 37
         versionCode = Integer.parseInt("${project.findProperty('appVersionCode') ?: '1'}")
-        versionName = "${project.findProperty('appVersionName') ?: '0.1.0'}"
+        versionName = "${project.findProperty('appVersionName') ?: '0.2.0'}"
     }
 
     signingConfigs {

@@ -1,6 +1,5 @@
 package ir.mmxkarimi.shockwave.ui.player;
 
-import android.content.Context;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -37,24 +36,18 @@ import ir.mmxkarimi.shockwave.ui.nav.PlayerNavigator;
 import ir.mmxkarimi.shockwave.ui.player.lyrics.LyricsAdapter;
 import ir.mmxkarimi.shockwave.ui.player.lyrics.LyricsScrollPolicy;
 import ir.mmxkarimi.shockwave.ui.queue.QueueFragment;
-import ir.mmxkarimi.shockwave.ui.widget.BarsSeekView;
 import ir.mmxkarimi.shockwave.ui.widget.BaseSeekView;
 import ir.mmxkarimi.shockwave.ui.widget.SeekBarView;
-import ir.mmxkarimi.shockwave.ui.widget.WaveformSeekView;
 import ir.mmxkarimi.shockwave.ui.widget.WavySeekView;
 
 import java.util.Locale;
 
 /**
  * Full player (design v1, 05/06/11/15): top row lyrics toggle · shuffle/repeat/queue pill group · heart; cover or
- * synced lyrics; title/artist; seek (Wavy default / Waveform / Bars from the "seek_bar_style" setting); cookie
- * play/pause between rounded prev/next; output chip. All observation uses the view lifecycle, so position ticks and
- * animations stop when the player is not visible.
+ * synced lyrics; title/artist; wavy seek; cookie play/pause between rounded prev/next; output chip. All observation
+ * uses the view lifecycle, so position ticks and animations stop when the player is not visible.
  */
 public final class PlayerFragment extends Fragment {
-
-    /** Seek-bar styles (D4): Wavy default, Waveform, Bars (voice-memo). */
-    public enum SeekStyle { WAVY, WAVEFORM, BARS }
 
     private PlayerFragmentBinding b;
     private BaseSeekView seek;
@@ -87,7 +80,7 @@ public final class PlayerFragment extends Fragment {
             return insets;
         });
 
-        seek = createSeekView(readSeekStyle(requireContext()));
+        seek = new WavySeekView(requireContext());
         b.playerSeekContainer.addView(seek, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
         seek.setContentDescription(getString(R.string.player_seek));
@@ -113,31 +106,11 @@ public final class PlayerFragment extends Fragment {
         vm.getState().observe(getViewLifecycleOwner(), this::render);
         vm.getCurrentTrack().observe(getViewLifecycleOwner(), this::renderTrack);
         vm.getLiked().observe(getViewLifecycleOwner(), this::renderLiked);
-        // Wavy ignores the envelope: don't extract it (CPU/battery) unless the chosen style draws it.
-        if (!(seek instanceof WavySeekView)) vm.getWaveform().observe(getViewLifecycleOwner(), w -> seek.setWaveform(w));
         vm.getShowLyrics().observe(getViewLifecycleOwner(), this::renderStage);
         vm.getLyrics().observe(getViewLifecycleOwner(), this::renderLyrics);
         vm.getActiveLyricLine().observe(getViewLifecycleOwner(), this::renderActiveLine);
 
         if (savedInstanceState == null && PlayerPalette.motionAllowed(requireContext())) playEnterTransition();
-    }
-
-    /** Reads the Settings screen's choice (T3's SettingsStore, file "settings"); Wavy when unset or unknown. */
-    static SeekStyle readSeekStyle(Context ctx) {
-        try {
-            return SeekStyle.valueOf(new ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore(ctx).getSeekStyle().name());
-        } catch (RuntimeException e) {
-            return SeekStyle.WAVY;
-        }
-    }
-
-    private BaseSeekView createSeekView(SeekStyle style) {
-        Context c = requireContext();
-        switch (style) {
-            case WAVEFORM: return new WaveformSeekView(c);
-            case BARS: return new BarsSeekView(c);
-            default: return new WavySeekView(c);
-        }
     }
 
     /**

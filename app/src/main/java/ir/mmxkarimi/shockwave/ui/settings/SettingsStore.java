@@ -8,8 +8,6 @@ public interface SettingsStore {
 
     enum Theme { SYSTEM, LIGHT, DARK, BLACK }
 
-    enum SeekStyle { WAVY, WAVEFORM, BARS }
-
     /** BCP-47 tag, or "" for the system language. */
     String LANG_SYSTEM = "";
 
@@ -20,10 +18,6 @@ public interface SettingsStore {
     boolean isArtworkColors();
 
     void setArtworkColors(boolean on);
-
-    SeekStyle getSeekStyle();
-
-    void setSeekStyle(SeekStyle style);
 
     String getLanguage();
 

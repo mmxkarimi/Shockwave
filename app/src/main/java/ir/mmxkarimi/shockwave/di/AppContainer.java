@@ -9,7 +9,6 @@ import androidx.core.content.ContextCompat;
 import ir.mmxkarimi.shockwave.BuildConfig;
 import ir.mmxkarimi.shockwave.data.lyrics.SqliteLyricsCacheStore;
 import ir.mmxkarimi.shockwave.data.settings.SettingsStore;
-import ir.mmxkarimi.shockwave.data.waveform.WaveformRepositoryImpl;
 import ir.mmxkarimi.shockwave.domain.repository.HomeFeedSource;
 import ir.mmxkarimi.shockwave.domain.repository.LibraryAdmin;
 import ir.mmxkarimi.shockwave.domain.repository.LibraryRepository;
@@ -85,9 +84,9 @@ public final class AppContainer {
             library = data.library;
             libraryAdmin = data.library;
             homeFeed = data.homeFeed;
-            WaveformRepositoryImpl realWaveform = WaveformModule.create(appContext, data.waveformStore, this::batterySaverActive);
-            waveform = realWaveform;
-            player = PlaybackModule.createController(appContext, data.library::recordPlay, realWaveform::prefetch);
+            waveform = WaveformModule.create(appContext, data.waveformStore, this::batterySaverActive);
+            // Wavy is the only seek style, which reads no envelope: nothing to prefetch for it.
+            player = PlaybackModule.createController(appContext, data.library::recordPlay, null);
             lyrics = LyricsModule.create(appContext, BuildConfig.VERSION_NAME,
                     new SqliteLyricsCacheStore(data.dbHelper, System::currentTimeMillis),
                     () -> !Boolean.FALSE.equals(settings.lyricsOnline().getValue()));
@@ -104,16 +103,16 @@ public final class AppContainer {
         return libraryAdmin;
     }
 
-    /** Call when the user grants the audio permission: runs the first scan (or a stale one). */
+    /** Call when the user grants the audio permission: runs the first scan (or a fresh one). */
     public void onAudioPermissionGranted() {
         foregroundScanDone.set(true);
-        libraryAdmin.scanIfStale();
+        libraryAdmin.rescan(null);
     }
 
-    /** Call when the first activity of this process starts: refreshes the library once if the device's media changed. */
+    /** Call when the first activity of this process starts: refreshes the music index once per launch. */
     public void onAppForeground() {
         if (!useFakes && hasAudioPermission() && foregroundScanDone.compareAndSet(false, true)) {
-            libraryAdmin.scanIfStale();
+            libraryAdmin.rescan(null);
         }
     }
 

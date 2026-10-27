@@ -25,7 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.List;
 
-/** Renders the full player (fake data) to docs/screens/p2-player-*.png for visual review against design v1. */
+/** Renders the full player (fake data) to build/render/p2-player-*.png (git-ignored) for visual review. */
 @RunWith(RobolectricTestRunner.class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 public class PlayerRenderTest {
@@ -65,7 +65,7 @@ public class PlayerRenderTest {
         }
         Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         v.draw(new Canvas(bmp));
-        File dir = new File("../docs/screens");
+        File dir = new File("build/render");
         dir.mkdirs();
         File out = new File(dir, name + ".png");
         try (FileOutputStream fos = new FileOutputStream(out)) {

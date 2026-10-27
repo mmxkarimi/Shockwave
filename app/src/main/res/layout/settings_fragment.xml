@@ -28,14 +28,6 @@
             android:layout_height="wrap_content"
             android:text="@string/settings_artwork_colors" />
         <TextView style="@style/Settings.RowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings_artwork_colors_sub" />
-        <TextView style="@style/Settings.RowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings_seek_style" />
-        <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:scrollbars="none">
-        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingHorizontal="20dp" android:paddingBottom="12dp">
-            <TextView android:id="@+id/seek_wavy" style="@style/Search.Chip" android:text="@string/settings_seek_wavy" />
-            <TextView android:id="@+id/seek_waveform" style="@style/Search.Chip" android:text="@string/settings_seek_waveform" />
-            <TextView android:id="@+id/seek_bars" style="@style/Search.Chip" android:text="@string/settings_seek_bars" />
-        </LinearLayout>
-        </HorizontalScrollView>
         <TextView style="@style/Settings.RowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings_language" />
         <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:scrollbars="none">
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingHorizontal="20dp" android:paddingBottom="12dp">
@@ -47,7 +39,11 @@
         <TextView style="@style/Scr.GroupLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:text="@string/settings_library" />
         <LinearLayout android:id="@+id/folders" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="64dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:orientation="vertical" android:gravity="center_vertical">
             <TextView style="@style/Settings.RowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="0dp" android:text="@string/settings_folders" />
-            <TextView style="@style/Settings.RowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings_folders_all" />
+            <TextView android:id="@+id/folders_sub" style="@style/Settings.RowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings_folders_all" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/rescan" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="64dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:orientation="vertical" android:gravity="center_vertical">
+            <TextView style="@style/Settings.RowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="0dp" android:text="@string/settings_rescan" />
+            <TextView android:id="@+id/rescan_sub" style="@style/Settings.RowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings_rescan_sub" />
         </LinearLayout>
         <TextView style="@style/Scr.GroupLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:text="@string/settings_lyrics" />
         <androidx.appcompat.widget.SwitchCompat

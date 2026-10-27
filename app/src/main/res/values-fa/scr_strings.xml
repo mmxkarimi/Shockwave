@@ -2,6 +2,9 @@
     <string name="nav_settings">تنظیمات</string>
     <string name="nav_back">بازگشت</string>
     <string name="nav_play">پخش</string>
+    <string name="shortcut_play">پخش</string>
+    <string name="shortcut_recent">اخیراً</string>
+    <string name="shortcut_favorites">مورد علاقه</string>
     <string name="nav_player_unavailable">صفحه‌ی پخش‌کننده هنوز آماده نیست</string>
     <string name="nav_perm_title">موسیقی شما، روی همین گوشی</string>
     <string name="nav_perm_body">برای پخش آهنگ‌های ذخیره‌شده روی دستگاه، برنامه به اجازه‌ی خواندن فایل‌های صوتی نیاز دارد. چیزی از گوشی شما خارج نمی‌شود.</string>
@@ -61,10 +64,6 @@
     <string name="settings_theme_black">سیاه</string>
     <string name="settings_artwork_colors">رنگ از کاور</string>
     <string name="settings_artwork_colors_sub">پخش‌کننده رنگ کاور را می‌گیرد</string>
-    <string name="settings_seek_style">نوار پیشرفت</string>
-    <string name="settings_seek_wavy">موجی</string>
-    <string name="settings_seek_waveform">شکل موج</string>
-    <string name="settings_seek_bars">میله‌ای</string>
     <string name="settings_language">زبان</string>
     <string name="settings_lang_system">سیستم</string>
     <string name="settings_lang_en">English</string>
@@ -72,6 +71,19 @@
     <string name="settings_library">کتابخانه</string>
     <string name="settings_folders">پوشه‌های موسیقی</string>
     <string name="settings_folders_all">همه‌ی پوشه‌های دستگاه</string>
+    <plurals name="settings_folders_count">
+        <item quantity="one">%d پوشه</item>
+        <item quantity="other">%d پوشه</item>
+    </plurals>
+    <string name="settings_folder_add">افزودن پوشه</string>
+    <string name="settings_folder_remove_hint">برای حذف از پویش، روی پوشه بزنید</string>
+    <string name="settings_folder_add_failed">این پوشه قابل افزودن نیست</string>
+    <string name="settings_rescan">پویش دوباره‌ی کتابخانه</string>
+    <string name="settings_rescan_sub">تازه‌سازی فهرست موسیقی</string>
+    <string name="settings_scanning">در حال پویش…</string>
+    <string name="settings_scan_done_f">%1$d افزوده، %2$d به‌روزرسانی، %3$d حذف شد</string>
+    <string name="settings_scan_unchanged">کتابخانه به‌روز است</string>
+    <string name="settings_scan_failed">پویش ناموفق بود</string>
     <string name="settings_lyrics">متن ترانه</string>
     <string name="settings_lyrics_online">یافتن متن به‌صورت آنلاین</string>
     <string name="settings_lyrics_online_sub">وقتی فایل ‎.lrc پیدا نشد، متن همگام را جستجو کن</string>

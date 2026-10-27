@@ -19,7 +19,7 @@ public final class DataModule {
     public final DbHelper dbHelper;
     public final SettingsStore settings;
     public final MediaStoreScanner scanner;
-    /** Also the entry point for {@code rescan}, {@code scanIfStale} and the extra playlist edits. */
+    /** Also the entry point for {@code rescan} and the extra playlist edits. */
     public final SqliteLibraryRepository library;
     public final LocalHomeFeedSource homeFeed;
     /** Persistent waveform cache, ready to hand to {@code WaveformModule} (blocking calls, background thread). */

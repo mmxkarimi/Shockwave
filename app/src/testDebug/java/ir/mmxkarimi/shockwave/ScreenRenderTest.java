@@ -24,8 +24,8 @@ import java.io.FileOutputStream;
 
 
 /**
- * Debug-only visual check: renders the real shell (fake data) per tab to docs/screens/p3-*.png with native graphics,
- * so screens can be compared against docs/design/png without a device.
+ * Debug-only visual check: renders the real shell (fake data) per tab to build/render/p3-*.png (git-ignored) with
+ * native graphics, so the screens can be reviewed without a device.
  */
 @RunWith(RobolectricTestRunner.class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -85,8 +85,8 @@ public class ScreenRenderTest {
         Canvas c = new Canvas(bmp);
         c.drawColor(Tokens.color(a, R.attr.mpBackground));
         root.draw(c);
-        File dir = new File("../docs/screens");
-        if (!dir.isDirectory()) dir = new File("build");
+        File dir = new File("build/render");
+        if (!dir.isDirectory()) dir.mkdirs();
         File out = new File(dir, "p3-" + name + ".png");
         try (FileOutputStream fos = new FileOutputStream(out)) {
             bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);

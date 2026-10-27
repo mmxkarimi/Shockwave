@@ -1,6 +1,6 @@
 # Shockwave (Android)
 
-![License: Apache-2.0](https://img.shields.io/badge/license-Apache%202.0-blue) ![Pre-release v0.1.0](https://img.shields.io/badge/release-v0.1.0%20pre--release-orange)
+[![Build and Release Android APK](https://github.com/mmxkarimi/Shockwave/actions/workflows/release.yaml/badge.svg)](https://github.com/mmxkarimi/Shockwave/actions/workflows/release.yaml) ![License: Apache-2.0](https://img.shields.io/badge/license-Apache%202.0-blue) ![Pre-release v0.2.0](https://img.shields.io/badge/release-v0.2.0%20pre--release-orange)
 
 A fast, battery-friendly **local music player** for Android 8.0+. Your files only — no accounts, no ads, no tracking.
 
@@ -10,13 +10,13 @@ A fast, battery-friendly **local music player** for Android 8.0+. Your files onl
 - **Playback** — Media3 ExoPlayer in a foreground service: notification, lock-screen / Bluetooth controls, audio focus, pause on headphone unplug.
 - **Queue** — play next, drag to reorder, swipe to remove with undo, shuffle and repeat with undo, queue restored after restart.
 - **Lyrics** — synced lines from embedded tags or `.lrc` files, with optional online lookup on [LRCLIB](https://lrclib.net) (turn it off for a fully offline app).
-- **Player** — light / dark UI, accent colors from the cover art, three seek-bar styles (Wavy, Waveform, Bars), sleep timer with fade-out.
+- **Player** — light / dark UI, accent colors from the cover art, a wavy seek bar, sleep timer with fade-out.
 - **Persian & RTL** — full Persian translation, Vazirmatn font, mirrored layouts.
 - **Battery saver** — disables motion, blur and grain; honours the system reduce-motion setting.
 
 ## Install
 
-Download `Shockwave-v0.1.0.apk` from the [Releases page](https://github.com/mmxkarimi/Shockwave/releases), open it on your device and allow "install unknown apps".
+Download `Shockwave-v0.2.0.apk` from the [Releases page](https://github.com/mmxkarimi/Shockwave/releases), open it on your device and allow "install unknown apps".
 
 ## Privacy
 

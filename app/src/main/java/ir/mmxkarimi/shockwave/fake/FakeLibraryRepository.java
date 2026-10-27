@@ -204,8 +204,6 @@ public final class FakeLibraryRepository implements LibraryRepository, LibraryAd
         if (callback != null) callback.onResult(new ScanResult(true, 0, 0, 0));
     }
 
-    @Override public void scanIfStale() { }
-
     @Override public void renamePlaylist(String playlistId, String name) {
         Playlist p = playlists.get(playlistId);
         if (p == null || name.trim().isEmpty()) return;

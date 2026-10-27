@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press shortcuts on the launcher icon. The intents are explicit (targetClass below), handled by
+     MainActivity, which navigates or starts playback after the shell is up. Labels stay short (<= 10 chars). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="play"
+        android:enabled="true"
+        android:icon="@drawable/nav_ic_play"
+        android:shortLabel="@string/shortcut_play">
+        <intent
+            android:action="ir.mmxkarimi.shockwave.SHORTCUT_PLAY"
+            android:targetPackage="ir.mmxkarimi.shockwave"
+            android:targetClass="ir.mmxkarimi.shockwave.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="recent"
+        android:enabled="true"
+        android:icon="@drawable/nav_ic_history"
+        android:shortLabel="@string/shortcut_recent">
+        <intent
+            android:action="ir.mmxkarimi.shockwave.SHORTCUT_RECENT"
+            android:targetPackage="ir.mmxkarimi.shockwave"
+            android:targetClass="ir.mmxkarimi.shockwave.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="favorites"
+        android:enabled="true"
+        android:icon="@drawable/nav_ic_heart"
+        android:shortLabel="@string/shortcut_favorites">
+        <intent
+            android:action="ir.mmxkarimi.shockwave.SHORTCUT_FAVORITES"
+            android:targetPackage="ir.mmxkarimi.shockwave"
+            android:targetClass="ir.mmxkarimi.shockwave.MainActivity" />
+    </shortcut>
+</shortcuts>

@@ -20,7 +20,6 @@ public final class SettingsStore {
     private static final String PREFS = "settings";
     private static final String K_THEME = "theme";
     private static final String K_ARTWORK_COLORS = "artwork_colors";
-    private static final String K_SEEK_BAR = "seek_bar_style";
     private static final String K_LANGUAGE = "language";
     private static final String K_LYRICS_ONLINE = "lyrics_online";
     private static final String K_LYRICS_SIZE = "lyrics_text_size";
@@ -32,7 +31,6 @@ public final class SettingsStore {
     private final SharedPreferences prefs;
     private final MutableLiveData<ThemeMode> theme;
     private final MutableLiveData<Boolean> artworkColors;
-    private final MutableLiveData<SeekBarStyle> seekBarStyle;
     private final MutableLiveData<String> language;
     private final MutableLiveData<Boolean> lyricsOnline;
     private final MutableLiveData<LyricsTextSize> lyricsTextSize;
@@ -45,7 +43,6 @@ public final class SettingsStore {
         prefs = context.getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         theme = new MutableLiveData<>(readEnum(K_THEME, ThemeMode.SYSTEM));
         artworkColors = new MutableLiveData<>(prefs.getBoolean(K_ARTWORK_COLORS, true));
-        seekBarStyle = new MutableLiveData<>(readEnum(K_SEEK_BAR, SeekBarStyle.WAVY));
         language = new MutableLiveData<>(prefs.getString(K_LANGUAGE, ""));
         lyricsOnline = new MutableLiveData<>(prefs.getBoolean(K_LYRICS_ONLINE, true));
         lyricsTextSize = new MutableLiveData<>(readEnum(K_LYRICS_SIZE, LyricsTextSize.MEDIUM));
@@ -72,15 +69,6 @@ public final class SettingsStore {
     public void setArtworkColors(boolean value) {
         prefs.edit().putBoolean(K_ARTWORK_COLORS, value).apply();
         publish(artworkColors, value);
-    }
-
-    public LiveData<SeekBarStyle> seekBarStyle() {
-        return seekBarStyle;
-    }
-
-    public void setSeekBarStyle(SeekBarStyle value) {
-        prefs.edit().putString(K_SEEK_BAR, value.name()).apply();
-        publish(seekBarStyle, value);
     }
 
     /** BCP-47 language tag, or the empty string to follow the system language. */

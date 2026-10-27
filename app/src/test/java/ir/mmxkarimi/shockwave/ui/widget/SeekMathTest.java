@@ -53,12 +53,15 @@ public class SeekMathTest {
     }
 
     @Test public void shapeMorphEndpoints() {
-        assertEquals(1f, ShapeMath.squircle(0), 1e-6f);
-        // Superellipse: corners reach out to (0.84, 0.84), i.e. polar radius ~1.19, still inside the square bounds.
-        assertEquals(1.189f, ShapeMath.squircle(Math.PI / 4), 0.01f);
+        // Paused: a circle, exactly the unit radius at every angle.
+        assertEquals(1f, ShapeMath.radius(0.3, 0f), 1e-6f);
+        // Playing: the 10-lobe cookie, tips at 1 and valleys inside, so it also fits the square view.
         assertEquals(1f, ShapeMath.cookie(0), 1e-6f);
-        assertEquals(ShapeMath.squircle(0.3), ShapeMath.radius(0.3, 0f), 1e-6f);
+        assertTrue(ShapeMath.cookie(Math.PI / ShapeMath.COOKIE_LOBES) < 1f);
         assertEquals(ShapeMath.cookie(0.3), ShapeMath.radius(0.3, 1f), 1e-6f);
+        for (double t = 0; t < 2 * Math.PI; t += 0.05) {
+            assertTrue("shape wider than the view", ShapeMath.radius(t, 1f) <= 1f + 1e-6f);
+        }
     }
 
     @Test public void barsResampleKeepsPeaks() {
