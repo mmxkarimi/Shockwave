@@ -94,6 +94,10 @@ jobs:
             exit 1
           fi
 
+      - name: Rename release APK
+        shell: bash
+        run: mv app/build/outputs/apk/release/app-release.apk "app/build/outputs/apk/release/Shockwave-v${{ steps.version.outputs.name }}.apk"
+
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
@@ -105,7 +109,7 @@ jobs:
           draft: false
           prerelease: false
           fail_on_unmatched_files: true
-          files: app/build/outputs/apk/release/app-release.apk
+          files: app/build/outputs/apk/release/Shockwave-v${{ steps.version.outputs.name }}.apk
 
       - name: Remove signing keystore
         if: always()

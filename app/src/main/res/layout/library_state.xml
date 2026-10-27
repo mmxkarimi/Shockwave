@@ -11,7 +11,7 @@
     android:visibility="gone">
 
     <!-- Loading skeleton instead of a spinner; fills the screen (StateView.loading switches the root to top-aligned). -->
-    <com.mhrsdev.musicplayer.ui.widget.SkeletonView
+    <ir.mmxkarimi.shockwave.ui.widget.SkeletonView
         android:id="@+id/state_progress"
         android:layout_width="match_parent"
         android:layout_height="0dp"

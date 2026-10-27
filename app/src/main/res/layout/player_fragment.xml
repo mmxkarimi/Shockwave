@@ -8,7 +8,7 @@
     android:focusable="false"
     android:background="#0F1216">
 
-    <com.mhrsdev.musicplayer.ui.player.PlayerBackdropView
+    <ir.mmxkarimi.shockwave.ui.player.PlayerBackdropView
         android:id="@+id/player_backdrop"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -99,7 +99,7 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+            <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
                 android:id="@+id/player_artwork"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -274,7 +274,7 @@
                 android:contentDescription="@string/player_previous"
                 android:src="@drawable/player_ic_prev" />
 
-            <com.mhrsdev.musicplayer.ui.widget.MorphPlayPauseView
+            <ir.mmxkarimi.shockwave.ui.widget.MorphPlayPauseView
                 android:id="@+id/player_play"
                 android:layout_width="104dp"
                 android:layout_height="104dp"

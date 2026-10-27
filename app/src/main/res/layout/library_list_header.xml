@@ -8,7 +8,7 @@
     android:paddingTop="56dp"
     android:paddingBottom="16dp">
 
-    <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+    <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
         android:id="@+id/art"
         android:layout_width="200dp"
         android:layout_height="200dp"

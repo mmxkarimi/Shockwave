@@ -28,7 +28,7 @@
             android:clickable="true"
             android:focusable="true">
 
-            <com.mhrsdev.musicplayer.ui.widget.CollageBlurView
+            <ir.mmxkarimi.shockwave.ui.widget.CollageBlurView
                 android:id="@+id/liked_bg"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
@@ -64,7 +64,7 @@
                     android:textColor="?attr/mpOnSurface" />
             </LinearLayout>
 
-            <com.mhrsdev.musicplayer.ui.widget.MorphPlayPauseView
+            <ir.mmxkarimi.shockwave.ui.widget.MorphPlayPauseView
                 android:id="@+id/liked_play"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
@@ -105,19 +105,19 @@
             android:layout_gravity="top|end"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp">
-            <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+            <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
                 android:id="@+id/hub_albums_peek"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="0dp"
                 android:importantForAccessibility="no" />
-            <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+            <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
                 android:id="@+id/hub_albums_peek2"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="22dp"
                 android:importantForAccessibility="no" />
-            <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+            <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
                 android:id="@+id/hub_albums_peek3"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
@@ -174,19 +174,19 @@
             android:layout_gravity="top|end"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp">
-            <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+            <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
                 android:id="@+id/hub_playlists_peek"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="0dp"
                 android:importantForAccessibility="no" />
-            <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+            <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
                 android:id="@+id/hub_playlists_peek2"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="22dp"
                 android:importantForAccessibility="no" />
-            <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+            <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
                 android:id="@+id/hub_playlists_peek3"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
@@ -252,19 +252,19 @@
             android:layout_gravity="top|end"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp">
-            <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+            <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
                 android:id="@+id/hub_artists_peek"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="0dp"
                 android:importantForAccessibility="no" />
-            <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+            <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
                 android:id="@+id/hub_artists_peek2"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="22dp"
                 android:importantForAccessibility="no" />
-            <com.mhrsdev.musicplayer.ui.widget.ArtworkView
+            <ir.mmxkarimi.shockwave.ui.widget.ArtworkView
                 android:id="@+id/hub_artists_peek3"
                 android:layout_width="36dp"
                 android:layout_height="36dp"

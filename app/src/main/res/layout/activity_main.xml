@@ -33,7 +33,7 @@
             android:layout_marginHorizontal="12dp"
             android:layout_marginBottom="8dp">
 
-            <com.mhrsdev.musicplayer.ui.widget.MiniPlayerView
+            <ir.mmxkarimi.shockwave.ui.widget.MiniPlayerView
                 android:id="@+id/mini"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -47,7 +47,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp">
 
-            <com.mhrsdev.musicplayer.ui.widget.FloatingNavView
+            <ir.mmxkarimi.shockwave.ui.widget.FloatingNavView
                 android:id="@+id/nav"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

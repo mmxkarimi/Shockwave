@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <com.mhrsdev.musicplayer.ui.library.SquareArtworkView
+    <ir.mmxkarimi.shockwave.ui.library.SquareArtworkView
         android:id="@+id/art"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

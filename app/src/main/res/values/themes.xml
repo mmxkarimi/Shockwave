@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Material Components is only an invisible foundation (DayNight + widget defaults); the look comes from mp* tokens. -->
-    <style name="Base.Theme.MusicPlayer" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.Shockwave" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
@@ -13,13 +13,13 @@
         <item name="android:textColorSecondary">@color/mp_on_surface_variant</item>
         <item name="android:fontFamily">@font/mp_sans</item>
         <item name="fontFamily">@font/mp_sans</item>
-        <item name="android:textAppearance">@style/TextAppearance.MusicPlayer.Body</item>
-        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.MusicPlayer.Headline</item>
-        <item name="textAppearanceDisplaySmall">@style/TextAppearance.MusicPlayer.Display</item>
-        <item name="textAppearanceTitleMedium">@style/TextAppearance.MusicPlayer.Title</item>
-        <item name="textAppearanceBodyLarge">@style/TextAppearance.MusicPlayer.Body</item>
-        <item name="textAppearanceBodyMedium">@style/TextAppearance.MusicPlayer.Supporting</item>
-        <item name="textAppearanceLabelLarge">@style/TextAppearance.MusicPlayer.Label</item>
+        <item name="android:textAppearance">@style/TextAppearance.Shockwave.Body</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.Shockwave.Headline</item>
+        <item name="textAppearanceDisplaySmall">@style/TextAppearance.Shockwave.Display</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.Shockwave.Title</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.Shockwave.Body</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.Shockwave.Supporting</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.Shockwave.Label</item>
         <item name="mpBackground">@color/mp_background</item>
         <item name="mpSurfaceContainerLow">@color/mp_surface_container_low</item>
         <item name="mpSurfaceContainer">@color/mp_surface_container</item>
@@ -40,10 +40,10 @@
     </style>
 
     <!-- System / Light / Dark: DayNight follows AppCompatDelegate.setDefaultNightMode (ThemeController.applyMode). -->
-    <style name="Theme.MusicPlayer" parent="Base.Theme.MusicPlayer" />
+    <style name="Theme.Shockwave" parent="Base.Theme.Shockwave" />
 
     <!-- Black (AMOLED): dark scheme with black background + surface containers. Applied via ThemeController.themeResFor. -->
-    <style name="Theme.MusicPlayer.Black" parent="Base.Theme.MusicPlayer">
+    <style name="Theme.Shockwave.Black" parent="Base.Theme.Shockwave">
         <item name="android:windowBackground">@color/mp_black_background</item>
         <item name="colorSurface">@color/mp_black_background</item>
         <item name="mpBackground">@color/mp_black_background</item>

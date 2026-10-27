@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- 48dp icon button with a circular ripple; tint with app:tint / android:tint per screen. -->
-    <style name="Widget.MusicPlayer.IconButton" parent="">
+    <style name="Widget.Shockwave.IconButton" parent="">
         <item name="android:layout_width">@dimen/mp_touch_target</item>
         <item name="android:layout_height">@dimen/mp_touch_target</item>
         <item name="android:minWidth">@dimen/mp_touch_target</item>
@@ -14,7 +14,7 @@
 
     <!-- v1 type ramp (DESIGN.md section 3): Google Sans Flex (Latin) / Vazirmatn (font-fa) via @font/mp_sans.
          The weight picks a variable-font instance from mp_sans.xml; API 26-27 fall back to textStyle. -->
-    <style name="TextAppearance.MusicPlayer.Display" parent="">
+    <style name="TextAppearance.Shockwave.Display" parent="">
         <item name="android:textSize">@dimen/mp_text_display</item>
         <item name="android:fontFamily">@font/mp_sans</item>
         <item name="android:textFontWeight" tools:targetApi="28">600</item>
@@ -22,7 +22,7 @@
         <item name="android:letterSpacing">0</item>
         <item name="android:textColor">?attr/mpOnSurface</item>
     </style>
-    <style name="TextAppearance.MusicPlayer.Headline" parent="">
+    <style name="TextAppearance.Shockwave.Headline" parent="">
         <item name="android:textSize">@dimen/mp_text_headline</item>
         <item name="android:fontFamily">@font/mp_sans</item>
         <item name="android:textFontWeight" tools:targetApi="28">500</item>
@@ -30,7 +30,7 @@
         <item name="android:letterSpacing">0</item>
         <item name="android:textColor">?attr/mpOnSurface</item>
     </style>
-    <style name="TextAppearance.MusicPlayer.Lyrics" parent="">
+    <style name="TextAppearance.Shockwave.Lyrics" parent="">
         <item name="android:textSize">@dimen/mp_text_lyrics</item>
         <item name="android:fontFamily">@font/mp_sans</item>
         <item name="android:textFontWeight" tools:targetApi="28">500</item>
@@ -38,7 +38,7 @@
         <item name="android:letterSpacing">0</item>
         <item name="android:textColor">?attr/mpOnSurface</item>
     </style>
-    <style name="TextAppearance.MusicPlayer.Title" parent="">
+    <style name="TextAppearance.Shockwave.Title" parent="">
         <item name="android:textSize">@dimen/mp_text_title</item>
         <item name="android:fontFamily">@font/mp_sans</item>
         <item name="android:textFontWeight" tools:targetApi="28">500</item>
@@ -46,7 +46,7 @@
         <item name="android:letterSpacing">0</item>
         <item name="android:textColor">?attr/mpOnSurface</item>
     </style>
-    <style name="TextAppearance.MusicPlayer.Body" parent="">
+    <style name="TextAppearance.Shockwave.Body" parent="">
         <item name="android:textSize">@dimen/mp_text_body</item>
         <item name="android:fontFamily">@font/mp_sans</item>
         <item name="android:textFontWeight" tools:targetApi="28">400</item>
@@ -54,7 +54,7 @@
         <item name="android:letterSpacing">0</item>
         <item name="android:textColor">?attr/mpOnSurface</item>
     </style>
-    <style name="TextAppearance.MusicPlayer.Supporting" parent="">
+    <style name="TextAppearance.Shockwave.Supporting" parent="">
         <item name="android:textSize">@dimen/mp_text_supporting</item>
         <item name="android:fontFamily">@font/mp_sans</item>
         <item name="android:textFontWeight" tools:targetApi="28">400</item>
@@ -62,7 +62,7 @@
         <item name="android:letterSpacing">0</item>
         <item name="android:textColor">?attr/mpOnSurfaceVariant</item>
     </style>
-    <style name="TextAppearance.MusicPlayer.Label" parent="">
+    <style name="TextAppearance.Shockwave.Label" parent="">
         <item name="android:textSize">@dimen/mp_text_label</item>
         <item name="android:fontFamily">@font/mp_sans</item>
         <item name="android:textFontWeight" tools:targetApi="28">500</item>
@@ -71,7 +71,7 @@
         <item name="android:textColor">?attr/mpOnSurfaceVariant</item>
     </style>
     <!-- Durations, counts and times: tabular figures so columns do not jitter. -->
-    <style name="TextAppearance.MusicPlayer.Numeric" parent="TextAppearance.MusicPlayer.Supporting">
+    <style name="TextAppearance.Shockwave.Numeric" parent="TextAppearance.Shockwave.Supporting">
         <item name="android:fontFeatureSettings">tnum</item>
     </style>
 </resources>

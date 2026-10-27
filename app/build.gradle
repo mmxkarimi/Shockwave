@@ -8,11 +8,11 @@ def releaseProp = { String name -> project.findProperty(name) ?: System.getenv(n
 def releaseKeystore = releaseProp('RELEASE_KEYSTORE_FILE')
 
 android {
-    namespace 'com.mhrsdev.musicplayer'
+    namespace 'ir.mmxkarimi.shockwave'
     compileSdkVersion 'android-37.0'
 
     defaultConfig {
-        applicationId 'com.mhrsdev.musicplayer'
+        applicationId 'ir.mmxkarimi.shockwave'
         minSdk 26
         targetSdk 37
         versionCode = Integer.parseInt("${project.findProperty('appVersionCode') ?: '1'}")
