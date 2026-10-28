@@ -53,6 +53,12 @@ android {
         buildConfig true
     }
 
+    packaging {
+        jniLibs {
+            keepDebugSymbols += "**/libandroidx.graphics.path.so"
+        }
+    }
+
     lint {
         abortOnError true
         checkDependencies true
