@@ -54,7 +54,9 @@ public class PlaybackService extends MediaSessionService {
                         if (player.getPlaybackState() == Player.STATE_IDLE && player.getMediaItemCount() > 0) {
                             player.prepare();
                         }
-                        return super.onMediaButtonEvent(session, controllerInfo, intent);
+                        // MediaSession.Callback is an interface, so plain "super" points to Object. Return false to let
+                        // Media3 handle the button as usual (this is what the interface default does).
+                        return false;
                     }
                 });
         Intent launch = getPackageManager().getLaunchIntentForPackage(getPackageName());
