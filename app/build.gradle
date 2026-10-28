@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
 }
 
 // Release signing: RELEASE_KEYSTORE_FILE / _PASSWORD / RELEASE_KEY_ALIAS / _PASSWORD from gradle properties or env.
@@ -16,8 +17,8 @@ android {
         applicationId 'ir.mmxkarimi.shockwave'
         minSdk 29
         targetSdk 37
-        versionCode = 6
-        versionName = "0.4.0"
+        versionCode = 7
+        versionName = "0.5.0"
     }
 
     signingConfigs {
@@ -47,6 +48,7 @@ android {
     }
 
     buildFeatures {
+        compose true
         viewBinding true
         buildConfig true
     }
@@ -67,12 +69,25 @@ dependencies {
     implementation libs.androidx.appcompat
     implementation libs.androidx.core
     implementation libs.androidx.activity
+    implementation libs.androidx.activity.compose
     implementation libs.androidx.fragment
     implementation libs.androidx.lifecycle.viewmodel
+    implementation libs.androidx.lifecycle.viewmodel.compose
+    implementation libs.androidx.lifecycle.runtime.compose
     implementation libs.androidx.lifecycle.livedata
     implementation libs.androidx.recyclerview
     implementation libs.androidx.constraintlayout
     implementation libs.material
+
+    // Jetpack Compose
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.ui
+    implementation libs.compose.ui.graphics
+    implementation libs.compose.ui.tooling.preview
+    implementation libs.compose.foundation
+    implementation libs.compose.material3
+    implementation libs.compose.material.icons.extended
+    debugImplementation libs.compose.ui.tooling
 
     implementation libs.media3.exoplayer
     implementation libs.media3.session

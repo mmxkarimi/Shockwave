@@ -1,0 +1,24 @@
+package ir.mmxkarimi.shockwave.ui.nav
+
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
+
+/** READ_MEDIA_AUDIO on API 33+, READ_EXTERNAL_STORAGE below. */
+object AudioPermission {
+    @JvmStatic
+    fun name(): String {
+        return if (Build.VERSION.SDK_INT >= 33) {
+            Manifest.permission.READ_MEDIA_AUDIO
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+    }
+
+    @JvmStatic
+    fun granted(context: Context): Boolean {
+        return ContextCompat.checkSelfPermission(context, name()) == PackageManager.PERMISSION_GRANTED
+    }
+}
