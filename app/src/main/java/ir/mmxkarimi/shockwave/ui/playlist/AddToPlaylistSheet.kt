@@ -78,7 +78,7 @@ fun AddToPlaylistContent(
                 value = newName,
                 onValueChange = { newName = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text(text = stringResource(R.string.library_playlist_name_hint)) },
+                placeholder = { Text(text = stringResource(R.string.playlist_new_hint)) },
                 singleLine = true
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -143,7 +143,7 @@ class AddToPlaylistSheet : BottomSheetDialogFragment() {
 
         return ComposeView(requireContext()).apply {
             setContent {
-                val playlists by library.playlists.observeAsState(emptyList())
+                val playlists by library.getPlaylists().observeAsState(emptyList())
 
                 ShockwaveTheme {
                     Surface {

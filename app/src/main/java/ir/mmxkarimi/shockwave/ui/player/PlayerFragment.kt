@@ -100,7 +100,7 @@ fun FullPlayerScreen(
     val currentTrack = track
     val duration = currentTrack?.durationMs ?: 0L
     val pos = state?.positionMs ?: 0L
-    val isPlaying = state?.isPlaying == true
+    val isPlaying = state?.playing == true
 
     var isDraggingSlider by remember { mutableStateOf(false) }
     var dragPosition by remember { mutableFloatStateOf(0f) }
@@ -293,7 +293,7 @@ fun FullPlayerScreen(
                     Icon(
                         imageVector = Icons.Default.Shuffle,
                         contentDescription = "Shuffle",
-                        tint = if (state?.shuffleMode == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = if (state?.shuffleEnabled == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 

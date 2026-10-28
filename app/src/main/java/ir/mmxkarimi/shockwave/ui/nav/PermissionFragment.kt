@@ -119,7 +119,7 @@ fun PermissionContent(
             onClick = onDone,
             modifier = Modifier.fillMaxWidth(0.8f)
         ) {
-            Text(text = stringResource(R.string.nav_perm_skip))
+            Text(text = stringResource(R.string.nav_perm_folders))
         }
     }
 }

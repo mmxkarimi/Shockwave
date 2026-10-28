@@ -82,7 +82,7 @@ fun QueueSheetContent(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(R.string.queue_title),
+                    text = stringResource(R.string.player_queue),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
                 if (!ui?.playingFrom.isNullOrBlank()) {

@@ -11,7 +11,7 @@ import ir.mmxkarimi.shockwave.domain.repository.PlayerController
 class ShellViewModel(private val player: PlayerController) : ViewModel() {
     private val tabLiveData = MutableLiveData(ScreenNavigator.Tab.HOME)
 
-    fun getPlayback(): LiveData<PlaybackState> = player.state
+    fun getPlayback(): LiveData<PlaybackState> = player.getState()
 
     fun getTab(): LiveData<ScreenNavigator.Tab> = tabLiveData
 

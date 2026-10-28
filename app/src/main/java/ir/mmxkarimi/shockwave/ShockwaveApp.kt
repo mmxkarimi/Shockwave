@@ -25,7 +25,7 @@ open class ShockwaveApp : Application() {
             )
         }
         // Below API 33 AppCompat keeps the chosen locale only in memory: re-apply the stored choice on every start.
-        if (Build.VERSION.SDK_INT < 33) ThemeApplier.applyLanguage(container.settings().language().value)
+        if (Build.VERSION.SDK_INT < 33) ThemeApplier.applyLanguage(container.settings().language().value ?: "")
         registerActivityLifecycleCallbacks(FirstActivityStart())
     }
 

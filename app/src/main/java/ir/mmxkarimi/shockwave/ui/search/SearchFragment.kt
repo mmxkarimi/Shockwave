@@ -97,7 +97,7 @@ fun SearchScreen(
         ) {
             val filters = listOf(
                 SearchFilter.ALL to R.string.search_filter_all,
-                SearchFilter.TRACKS to R.string.search_filter_tracks,
+                SearchFilter.SONGS to R.string.search_filter_songs,
                 SearchFilter.ALBUMS to R.string.search_filter_albums,
                 SearchFilter.ARTISTS to R.string.search_filter_artists,
                 SearchFilter.PLAYLISTS to R.string.search_filter_playlists
@@ -150,7 +150,7 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 96.dp)
                 ) {
-                    items(results, key = { it.id }) { item ->
+                    items(results, key = { "${it.kind}_${it.track?.id ?: it.album?.id ?: it.artist?.id ?: it.playlist?.id ?: it.hashCode()}" }) { item ->
                         when (item.kind) {
                             SearchResult.Kind.TRACK -> {
                                 item.track?.let { track ->

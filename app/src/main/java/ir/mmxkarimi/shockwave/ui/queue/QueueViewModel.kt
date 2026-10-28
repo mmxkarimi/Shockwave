@@ -27,7 +27,7 @@ class QueueViewModel(private val player: PlayerController) : ViewModel() {
 
     data class Removed(val track: Track, val queueIndex: Int)
 
-    private val state: LiveData<PlaybackState> = player.state
+    private val state: LiveData<PlaybackState> = player.getState()
     private val ui: LiveData<UiState> = state.map { map(it) }
 
     fun getUi(): LiveData<UiState> = ui
@@ -38,39 +38,39 @@ class QueueViewModel(private val player: PlayerController) : ViewModel() {
     }
 
     fun playAt(queueIndex: Int) {
-        player.playAt(queueIndex)
+        player.skipTo(queueIndex)
     }
 
     fun move(fromQueueIndex: Int, toQueueIndex: Int) {
-        player.moveTrack(fromQueueIndex, toQueueIndex)
+        player.moveQueueItem(fromQueueIndex, toQueueIndex)
     }
 
     fun remove(queueIndex: Int): Removed? {
         val s = state.value ?: return null
         if (queueIndex < 0 || queueIndex >= s.queue.size) return null
         val t = s.queue[queueIndex]
-        player.removeTrack(queueIndex)
+        player.removeFromQueue(queueIndex)
         return Removed(t, queueIndex)
     }
 
     fun restore(removed: Removed) {
-        player.insertTrack(removed.queueIndex, removed.track)
+        player.addToQueue(removed.track, removed.queueIndex)
     }
 
     fun clearQueue() {
-        player.clearQueue()
+        player.play(emptyList(), -1, null)
     }
 
     fun undoShuffle() {
-        player.undoShuffle()
+        player.undoShuffleQueue()
     }
 
     fun setSleepCountdown(minutes: Int) {
-        player.setSleepTimer(SleepTimer.countdown(minutes))
+        player.setSleepTimer(minutes)
     }
 
     fun setSleepEndOfTrack() {
-        player.setSleepTimer(SleepTimer.endOfTrack())
+        player.setSleepTimerEndOfTrack()
     }
 
     fun cancelSleepTimer() {
@@ -91,13 +91,13 @@ class QueueViewModel(private val player: PlayerController) : ViewModel() {
                 emptyList()
             }
             val st = s.sleepTimer
-            val kind = st?.kind ?: SleepTimer.Kind.OFF
-            val minLeft = if (st != null && kind == SleepTimer.Kind.COUNTDOWN) {
+            val kind = st.kind
+            val minLeft = if (kind == SleepTimer.Kind.COUNTDOWN) {
                 PlayerFormat.minutesCeil(st.remainingMs)
             } else {
                 0
             }
-            val configured = if (st != null && kind == SleepTimer.Kind.COUNTDOWN) st.configuredMinutes else 0
+            val configured = if (kind == SleepTimer.Kind.COUNTDOWN) (st.totalMs / 60000L).toInt() else 0
             val current = if (cur in s.queue.indices) s.queue[cur] else null
             return UiState(
                 upNext = upNext,

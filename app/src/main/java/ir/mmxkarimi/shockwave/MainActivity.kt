@@ -112,9 +112,6 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
 
     private fun setupComposeChrome() {
         binding.chrome.visibility = View.VISIBLE
-        binding.nav.visibility = View.GONE
-        binding.mini.visibility = View.GONE
-
         binding.chrome.removeAllViews()
         val composeView = ComposeView(this).apply {
             setContent {
@@ -134,7 +131,7 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                         if (track != null) {
                             MiniPlayerBar(
                                 track = track,
-                                isPlaying = playback?.isPlaying == true,
+                                isPlaying = playback?.playing == true,
                                 progressFraction = progressFraction,
                                 onClick = { openFullPlayer() },
                                 onPlayPause = { shell.togglePlayPause() },
@@ -159,7 +156,7 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
         out.putInt(STATE_TAB, (shell.getTab().value ?: Tab.HOME).ordinal)
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         applyShortcut(intent)
@@ -193,12 +190,12 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
 
     private fun playFromShortcut() {
         val c = (application as ShockwaveApp).getContainer()
-        val state = c.player.state.value
+        val state = c.player.getState().value
         if (state != null && state.currentTrack != null) {
             c.player.resume()
             return
         }
-        val recent: LiveData<List<Track>> = c.library.recentlySaved
+        val recent: LiveData<List<Track>> = c.library.getRecentlySaved()
         recent.observe(this, object : Observer<List<Track>> {
             override fun onChanged(tracks: List<Track>) {
                 if (tracks.isEmpty()) return

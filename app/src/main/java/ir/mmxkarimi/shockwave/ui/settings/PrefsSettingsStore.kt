@@ -15,7 +15,7 @@ class PrefsSettingsStore(
     constructor(context: Context) : this(Screens.container(context).settings())
 
     override fun getTheme(): SettingsStore.Theme {
-        return SettingsStore.Theme.valueOf(data.theme().value.name)
+        return SettingsStore.Theme.valueOf((data.theme().value ?: ThemeMode.SYSTEM).name)
     }
 
     override fun setTheme(theme: SettingsStore.Theme) {
@@ -23,7 +23,7 @@ class PrefsSettingsStore(
     }
 
     override fun isArtworkColors(): Boolean {
-        return data.artworkColors().value
+        return data.artworkColors().value ?: true
     }
 
     override fun setArtworkColors(on: Boolean) {
@@ -31,7 +31,7 @@ class PrefsSettingsStore(
     }
 
     override fun getLanguage(): String {
-        return data.language().value
+        return data.language().value ?: ""
     }
 
     override fun setLanguage(tag: String) {
@@ -39,7 +39,7 @@ class PrefsSettingsStore(
     }
 
     override fun isOnlineLyrics(): Boolean {
-        return data.lyricsOnline().value
+        return data.lyricsOnline().value ?: true
     }
 
     override fun setOnlineLyrics(on: Boolean) {
@@ -47,7 +47,7 @@ class PrefsSettingsStore(
     }
 
     override fun getSleepDefaultMinutes(): Int {
-        return data.sleepTimerMinutes().value
+        return data.sleepTimerMinutes().value ?: ir.mmxkarimi.shockwave.data.settings.SettingsStore.DEFAULT_SLEEP_TIMER_MINUTES
     }
 
     override fun setSleepDefaultMinutes(minutes: Int) {

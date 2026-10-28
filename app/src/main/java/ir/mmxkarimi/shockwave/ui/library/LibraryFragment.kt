@@ -110,7 +110,7 @@ fun LibraryScreen(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = stringResource(R.string.library_liked_title),
+                            text = stringResource(R.string.library_liked),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -162,7 +162,7 @@ fun LibraryScreen(
                     onClick = { onNavigateCollection(ScreenNavigator.Collection.PLAYLISTS) }
                 )
                 CollectionTile(
-                    title = stringResource(R.string.library_history_title),
+                    title = stringResource(R.string.library_history),
                     icon = Icons.Default.History,
                     count = 0,
                     modifier = Modifier.weight(1f),
@@ -176,7 +176,7 @@ fun LibraryScreen(
         if (recent.isNotEmpty()) {
             item {
                 SectionHeader(
-                    title = stringResource(R.string.library_recent_title),
+                    title = stringResource(R.string.library_recently_saved),
                     actionLabel = "See all",
                     onActionClick = { onNavigateTrackList(ScreenNavigator.TrackList.RECENT, null) }
                 )

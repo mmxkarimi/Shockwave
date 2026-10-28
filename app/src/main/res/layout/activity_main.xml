@@ -23,37 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:orientation="vertical">
-
-        <!-- Mini-player (T2 widget). -->
-        <FrameLayout
-            android:id="@+id/mini_player_slot"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
-            android:layout_marginBottom="8dp">
-
-            <ir.mmxkarimi.shockwave.ui.widget.MiniPlayerView
-                android:id="@+id/mini"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone" />
-        </FrameLayout>
-
-        <!-- Floating pill nav (T2 widget). -->
-        <FrameLayout
-            android:id="@+id/nav_slot"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp">
-
-            <ir.mmxkarimi.shockwave.ui.widget.FloatingNavView
-                android:id="@+id/nav"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal" />
-        </FrameLayout>
-    </LinearLayout>
+        android:orientation="vertical" />
 
     <!-- Full player (T4) is added here over everything. -->
     <FrameLayout

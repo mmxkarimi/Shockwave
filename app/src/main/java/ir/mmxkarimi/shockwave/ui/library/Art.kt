@@ -27,32 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ir.mmxkarimi.shockwave.ui.widget.ArtworkLoader
-import ir.mmxkarimi.shockwave.ui.widget.ArtworkView
 import ir.mmxkarimi.shockwave.ui.widget.PlaceholderArt
-
-/**
- * Art helper and Compose Artwork component.
- */
-object Art {
-    @JvmStatic
-    fun bind(view: ArtworkView, artworkUri: String?, seed: Int, cornerDp: Float, circle: Boolean) {
-        view.setZoom(1f)
-        view.setCircle(circle)
-        if (!circle) view.setCornerRadiusDp(cornerDp)
-        view.setArtwork(artworkUri, seed)
-    }
-
-    @JvmStatic
-    fun artist(view: ArtworkView, imageUri: String?, name: String?, seed: Int) {
-        view.setCircle(true)
-        if (imageUri == null) {
-            view.setMonogram(name, seed)
-        } else {
-            view.setZoom(1.8f)
-            view.setArtwork(imageUri, seed)
-        }
-    }
-}
 
 @Composable
 fun AsyncArtworkImage(

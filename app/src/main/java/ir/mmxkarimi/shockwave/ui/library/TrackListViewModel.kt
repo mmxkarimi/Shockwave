@@ -32,8 +32,8 @@ class TrackListViewModel(
     init {
         when (kind) {
             TrackList.ALBUM -> {
-                tracksLiveData = library.getAlbumTracks(id)
-                headerLiveData = library.getAlbum(id).map { a ->
+                tracksLiveData = library.getAlbumTracks(id ?: "")
+                headerLiveData = library.getAlbum(id ?: "").map { a ->
                     if (a == null) null
                     else Header(
                         title = a.title,
@@ -44,8 +44,8 @@ class TrackListViewModel(
                 }
             }
             TrackList.ARTIST -> {
-                tracksLiveData = library.getArtistTracks(id)
-                headerLiveData = library.getArtist(id).map { a ->
+                tracksLiveData = library.getArtistTracks(id ?: "")
+                headerLiveData = library.getArtist(id ?: "").map { a ->
                     if (a == null) null
                     else Header(
                         title = a.name,
@@ -56,8 +56,8 @@ class TrackListViewModel(
                 }
             }
             TrackList.PLAYLIST -> {
-                tracksLiveData = library.getPlaylistTracks(id)
-                headerLiveData = library.getPlaylist(id).map { p ->
+                tracksLiveData = library.getPlaylistTracks(id ?: "")
+                headerLiveData = library.getPlaylist(id ?: "").map { p ->
                     if (p == null) null
                     else Header(
                         title = p.name,
@@ -68,15 +68,15 @@ class TrackListViewModel(
                 }
             }
             TrackList.LIKED -> {
-                tracksLiveData = library.likedTracks
+                tracksLiveData = library.getLikedTracks()
                 headerLiveData = MutableLiveData(Header(null, null, 1, false))
             }
             TrackList.HISTORY -> {
-                tracksLiveData = library.history
+                tracksLiveData = library.getHistory()
                 headerLiveData = MutableLiveData(Header(null, null, 2, false))
             }
             TrackList.RECENT -> {
-                tracksLiveData = library.recentlySaved
+                tracksLiveData = library.getRecentlySaved()
                 headerLiveData = MutableLiveData(Header(null, null, 3, false))
             }
         }
@@ -91,8 +91,8 @@ class TrackListViewModel(
     }
 
     fun shuffle(tracks: List<Track>, playingFrom: String) {
+        if (tracks.isEmpty()) return
         val copy = ArrayList(tracks)
-        if (copy.isEmpty()) return
         copy.shuffle()
         player.play(copy, 0, playingFrom)
     }

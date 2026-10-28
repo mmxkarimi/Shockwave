@@ -49,22 +49,23 @@ object TrackMenu {
 
     /** Lists the playlists (last row: a new one) and adds [track] to the chosen one. */
     private fun pickPlaylist(context: Context, library: LibraryRepository, track: Track) {
-        library.playlists.observeForever(object : Observer<List<Playlist>> {
-            override fun onChanged(value: List<Playlist>) {
-                library.playlists.removeObserver(this)
-                val playlists = value ?: emptyList()
-                val names = Array(playlists.size + 1) { "" }
-                for (i in playlists.indices) {
-                    names[i] = playlists[i].name
+        val playlistsLiveData = library.getPlaylists()
+        playlistsLiveData.observeForever(object : Observer<List<Playlist>> {
+            override fun onChanged(playlists: List<Playlist>) {
+                playlistsLiveData.removeObserver(this)
+                val list = playlists ?: emptyList()
+                val names = Array(list.size + 1) { "" }
+                for (i in list.indices) {
+                    names[i] = list[i].name
                 }
-                names[playlists.size] = context.getString(R.string.library_playlist_create)
+                names[list.size] = context.getString(R.string.library_new_playlist)
                 AlertDialog.Builder(context)
                     .setTitle(R.string.library_menu_add_playlist)
                     .setItems(names) { _, which ->
-                        if (which < playlists.size) {
-                            library.addToPlaylist(playlists[which].id, track.id)
+                        if (which < list.size) {
+                            library.addToPlaylist(list[which].id, track.id)
                         } else {
-                            newPlaylist(context, library, track)
+                            createAndAdd(context, library, track)
                         }
                     }
                     .show()
@@ -72,16 +73,21 @@ object TrackMenu {
         })
     }
 
-    private fun newPlaylist(context: Context, library: LibraryRepository, track: Track) {
-        val input = EditText(context)
-        input.setHint(R.string.library_playlist_name_hint)
+    private fun createAndAdd(context: Context, library: LibraryRepository, track: Track) {
+        val name = EditText(context)
+        name.isSingleLine = true
+        name.setText(R.string.library_new_playlist)
         AlertDialog.Builder(context)
-            .setTitle(R.string.library_playlist_create)
-            .setView(input)
+            .setTitle(R.string.library_new_playlist)
+            .setView(name)
             .setPositiveButton(android.R.string.ok) { _, _ ->
-                val name = input.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    library.createPlaylist(name, track)
+                val text = name.text.toString().trim()
+                if (text.isNotEmpty()) {
+                    library.createPlaylist(text) { p ->
+                        if (p != null) {
+                            library.addToPlaylist(p.id, track.id)
+                        }
+                    }
                 }
             }
             .setNegativeButton(android.R.string.cancel, null)

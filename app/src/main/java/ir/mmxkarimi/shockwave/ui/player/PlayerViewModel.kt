@@ -26,7 +26,7 @@ class PlayerViewModel(
     private val waveformRepo: WaveformRepository
 ) : ViewModel() {
 
-    private val playbackStateLiveData: LiveData<PlaybackState> = player.state
+    private val playbackStateLiveData: LiveData<PlaybackState> = player.getState()
     private val currentTrackLiveData = MediatorLiveData<Track?>()
     private val lyricsLiveData: LiveData<Lyrics?>
     private val waveformLiveData: LiveData<FloatArray?>
@@ -46,13 +46,13 @@ class PlayerViewModel(
         }
         lyricsRequest.addSource(currentTrackLiveData) { t -> lyricsRequest.value = t }
         lyricsLiveData = lyricsRequest.switchMap { t ->
-            if (t == null) MutableLiveData<Lyrics?>(null) else lyricsRepo.getLyrics(t)
+            if (t == null) MutableLiveData<Lyrics?>(null) else lyricsRepo.lyricsFor(t)
         }
         waveformLiveData = currentTrackLiveData.switchMap { t ->
-            if (t == null) MutableLiveData<FloatArray?>(null) else waveformRepo.getWaveform(t.id, WAVEFORM_BARS)
+            if (t == null) MutableLiveData<FloatArray?>(null) else waveformRepo.waveformFor(t, WAVEFORM_BARS)
         }
         likedLiveData.addSource(currentTrackLiveData) { updateLiked() }
-        likedLiveData.addSource(library.likedTracks) { tracks ->
+        likedLiveData.addSource(library.getLikedTracks()) { tracks ->
             val set = HashSet<String>()
             tracks?.forEach { set.add(it.id) }
             likedIds = set
@@ -85,7 +85,7 @@ class PlayerViewModel(
         val lines = lyr.lines
         var active = -1
         for (i in lines.indices) {
-            if (lines[i].startMs <= pos) active = i else break
+            if (lines[i].timeMs <= pos) active = i else break
         }
         if (activeLyricLineLiveData.value == null || activeLyricLineLiveData.value != active) {
             activeLyricLineLiveData.value = active
@@ -105,8 +105,7 @@ class PlayerViewModel(
     fun previous() = player.previous()
     fun seekTo(positionMs: Long) = player.seekTo(positionMs)
     fun toggleShuffle() = player.toggleShuffle()
-    fun cycleRepeatMode() = player.cycleRepeatMode()
-    fun setRepeatMode(mode: RepeatMode) = player.setRepeatMode(mode)
+    fun cycleRepeatMode() = player.cycleRepeat()
 
     fun toggleLike() {
         val t = currentTrackLiveData.value ?: return
@@ -128,7 +127,7 @@ class PlayerViewModel(
     fun seekToLine(lineIndex: Int) {
         val lyr = lyricsLiveData.value ?: return
         if (lineIndex in lyr.lines.indices) {
-            seekTo(lyr.lines[lineIndex].startMs)
+            seekTo(lyr.lines[lineIndex].timeMs)
         }
     }
 

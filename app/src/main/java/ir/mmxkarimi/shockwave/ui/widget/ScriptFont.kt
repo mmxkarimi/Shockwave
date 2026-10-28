@@ -78,7 +78,7 @@ object ScriptFont {
     private fun baseVazir(context: Context): Typeface? {
         if (vazir == null) {
             try {
-                vazir = ResourcesCompat.getFont(context.applicationContext, R.font.vazirmatn_regular)
+                vazir = ResourcesCompat.getFont(context.applicationContext, R.font.vazirmatn)
             } catch (e: Exception) {
                 vazir = Typeface.SANS_SERIF
             }
