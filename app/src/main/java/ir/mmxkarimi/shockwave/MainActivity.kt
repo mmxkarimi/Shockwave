@@ -7,68 +7,24 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.fragment.app.DialogFragment
+import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import ir.mmxkarimi.shockwave.databinding.ActivityMainBinding
-import ir.mmxkarimi.shockwave.di.AppContainer
-import ir.mmxkarimi.shockwave.domain.model.PlaybackState
 import ir.mmxkarimi.shockwave.domain.model.Track
 import ir.mmxkarimi.shockwave.ui.components.MiniPlayerBar
 import ir.mmxkarimi.shockwave.ui.home.HomeFragment
@@ -89,9 +45,7 @@ import ir.mmxkarimi.shockwave.ui.queue.QueueFragment
 import ir.mmxkarimi.shockwave.ui.search.SearchFragment
 import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
 import ir.mmxkarimi.shockwave.ui.settings.SettingsFragment
-import ir.mmxkarimi.shockwave.ui.settings.SettingsStore
 import ir.mmxkarimi.shockwave.ui.settings.ThemeApplier
-import ir.mmxkarimi.shockwave.ui.theme.AccentScheme
 import ir.mmxkarimi.shockwave.ui.theme.ShockwaveTheme
 import ir.mmxkarimi.shockwave.ui.theme.ThemeController
 
@@ -162,21 +116,20 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
         binding.mini.visibility = View.GONE
 
         binding.chrome.removeAllViews()
-        val composeView = androidx.compose.ui.platform.ComposeView(this).apply {
+        val composeView = ComposeView(this).apply {
             setContent {
                 val playback by shell.getPlayback().observeAsState()
-                val currentTab by shell.getTab().observeAsState(Tab.HOME)
                 val accent by ThemeController.get(this@MainActivity).accent().observeAsState()
 
                 val track = playback?.currentTrack
                 val progressFraction = PlayerFormat.fraction(playback?.positionMs ?: 0L, playback?.durationMs ?: 0L)
 
                 ShockwaveTheme(accentScheme = accent) {
-                    Column(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .navigationBarsPadding(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        contentAlignment = Alignment.BottomCenter
                     ) {
                         if (track != null) {
                             MiniPlayerBar(
@@ -186,39 +139,6 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                                 onClick = { openFullPlayer() },
                                 onPlayPause = { shell.togglePlayPause() },
                                 onNext = { shell.next() }
-                            )
-                        }
-
-                        NavigationBar(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 6.dp)
-                                .clip(RoundedCornerShape(24.dp)),
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        ) {
-                            NavigationBarItem(
-                                selected = currentTab == Tab.HOME,
-                                onClick = { openTab(Tab.HOME) },
-                                icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                                label = { Text("Home") }
-                            )
-                            NavigationBarItem(
-                                selected = currentTab == Tab.SEARCH,
-                                onClick = { openTab(Tab.SEARCH) },
-                                icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                                label = { Text("Search") }
-                            )
-                            NavigationBarItem(
-                                selected = currentTab == Tab.LIBRARY,
-                                onClick = { openTab(Tab.LIBRARY) },
-                                icon = { Icon(Icons.Default.LibraryMusic, contentDescription = "Library") },
-                                label = { Text("Library") }
-                            )
-                            NavigationBarItem(
-                                selected = currentTab == Tab.SETTINGS,
-                                onClick = { openTab(Tab.SETTINGS) },
-                                icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                                label = { Text("Settings") }
                             )
                         }
                     }

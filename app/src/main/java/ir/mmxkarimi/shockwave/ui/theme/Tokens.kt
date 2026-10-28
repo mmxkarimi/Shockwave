@@ -21,6 +21,19 @@ object Tokens {
     const val RADIUS_CHIP: Float = 12f
     const val TOUCH_TARGET: Float = 48f
 
+    // Material 3 Expressive Radii (dp)
+    const val RADIUS_EXPRESSIVE_HERO: Float = 28f
+    const val RADIUS_EXPRESSIVE_SHEET: Float = 28f
+    const val RADIUS_EXPRESSIVE_GROUP: Float = 24f
+    const val RADIUS_EXPRESSIVE_CARD: Float = 20f
+    const val RADIUS_EXPRESSIVE_ITEM: Float = 14f
+    const val RADIUS_EXPRESSIVE_PILL: Float = 50f
+
+    // Spring Motion
+    const val SPRING_DAMPING_BOUNCY: Float = 0.7f
+    const val SPRING_STIFFNESS_LOW: Float = 300f
+    const val SPRING_STIFFNESS_MEDIUM: Float = 600f
+
     // Seek bar
     const val WAVE_AMPLITUDE: Float = 3f
     const val WAVE_LENGTH: Float = 26f
