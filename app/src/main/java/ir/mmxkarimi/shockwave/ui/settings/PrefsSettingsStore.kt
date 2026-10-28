@@ -47,7 +47,7 @@ class PrefsSettingsStore(
     }
 
     override fun getSleepDefaultMinutes(): Int {
-        return data.sleepTimerMinutes().value ?: ir.mmxkarimi.shockwave.data.settings.SettingsStore.DEFAULT_SLEEP_TIMER_MINUTES
+        return data.sleepTimerMinutes().value ?: 30
     }
 
     override fun setSleepDefaultMinutes(minutes: Int) {

@@ -885,7 +885,7 @@ fun HomeSectionRow(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(section.items, key = { it.id }) { item ->
+            items(section.items, key = { "${it.kind}_${it.track?.id ?: it.album?.id ?: it.playlist?.id ?: it.hashCode()}" }) { item ->
                 HomeCardItem(item = item, onClick = { onItemClick(item) })
             }
         }

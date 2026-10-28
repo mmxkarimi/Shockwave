@@ -5,6 +5,7 @@ import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.map
 import androidx.lifecycle.switchMap
 import ir.mmxkarimi.shockwave.domain.model.Lyrics
 import ir.mmxkarimi.shockwave.domain.model.PlaybackState
@@ -46,10 +47,10 @@ class PlayerViewModel(
         }
         lyricsRequest.addSource(currentTrackLiveData) { t -> lyricsRequest.value = t }
         lyricsLiveData = lyricsRequest.switchMap { t ->
-            if (t == null) MutableLiveData<Lyrics?>(null) else lyricsRepo.lyricsFor(t)
+            if (t == null) MutableLiveData<Lyrics?>(null) else lyricsRepo.lyricsFor(t).map { it as Lyrics? }
         }
         waveformLiveData = currentTrackLiveData.switchMap { t ->
-            if (t == null) MutableLiveData<FloatArray?>(null) else waveformRepo.waveformFor(t, WAVEFORM_BARS)
+            if (t == null) MutableLiveData<FloatArray?>(null) else waveformRepo.waveformFor(t, WAVEFORM_BARS).map { it as FloatArray? }
         }
         likedLiveData.addSource(currentTrackLiveData) { updateLiked() }
         likedLiveData.addSource(library.getLikedTracks()) { tracks ->
