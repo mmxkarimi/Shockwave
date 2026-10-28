@@ -31,8 +31,8 @@ internal class DbLiveData<T>(
         notifier.remove(this)
     }
 
-    override fun onChanged(changedTopics: Int) {
-        if ((changedTopics and topics) != 0) load()
+    override fun onChanged(topics: Int) {
+        if ((topics and this.topics) != 0) load()
     }
 
     private fun load() {

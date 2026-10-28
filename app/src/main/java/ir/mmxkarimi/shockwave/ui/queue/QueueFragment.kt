@@ -27,7 +27,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -96,7 +96,7 @@ fun QueueSheetContent(
 
             if (ui?.canUndoShuffle == true) {
                 IconButton(onClick = { vm.undoShuffle() }) {
-                    Icon(imageVector = Icons.Default.Undo, contentDescription = "Undo Shuffle")
+                    Icon(imageVector = Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo Shuffle")
                 }
             }
 

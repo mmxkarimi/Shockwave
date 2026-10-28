@@ -153,7 +153,7 @@ internal class PlaybackStore(context: Context) : Player.Listener {
 
         @JvmStatic
         private fun nullable(o: JSONObject, key: String): String? {
-            return if (o.isNull(key)) null else o.optString(key, null)
+            return if (o.isNull(key) || !o.has(key)) null else o.optString(key).ifEmpty { null }
         }
     }
 }

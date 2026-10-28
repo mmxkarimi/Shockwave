@@ -22,7 +22,7 @@ class LrclibClient internal constructor(
 
     override fun load(track: Track, cancel: CancelToken): Found? {
         val title = track.title
-        if (title == null || title.trim().isEmpty()) return null
+        if (title.trim().isEmpty()) return null
         val artist = known(track.artistName)
         val album = known(track.albumTitle)
         val sec = Math.round(track.durationMs / 1000.0).toInt()

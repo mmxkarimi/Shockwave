@@ -150,10 +150,10 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
         binding.bottomScrim.visibility = if (permissionFlow) View.GONE else View.VISIBLE
     }
 
-    override fun onSaveInstanceState(out: Bundle) {
-        super.onSaveInstanceState(out)
-        out.putBoolean(STATE_PERMISSION, permissionFlow)
-        out.putInt(STATE_TAB, (shell.getTab().value ?: Tab.HOME).ordinal)
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_PERMISSION, permissionFlow)
+        outState.putInt(STATE_TAB, (shell.getTab().value ?: Tab.HOME).ordinal)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -197,10 +197,10 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
         }
         val recent: LiveData<List<Track>> = c.library.getRecentlySaved()
         recent.observe(this, object : Observer<List<Track>> {
-            override fun onChanged(tracks: List<Track>) {
-                if (tracks.isEmpty()) return
+            override fun onChanged(value: List<Track>) {
+                if (value.isEmpty()) return
                 recent.removeObserver(this)
-                c.player.play(tracks, 0, getString(R.string.library_recently_saved))
+                c.player.play(value, 0, getString(R.string.library_recently_saved))
             }
         })
     }

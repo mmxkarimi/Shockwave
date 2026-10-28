@@ -107,7 +107,7 @@ class SettingsStore(context: Context) {
     }
 
     private fun readSet(key: String): Set<String> =
-        Collections.unmodifiableSet(HashSet(prefs.getStringSet(key, Collections.emptySet())))
+        Collections.unmodifiableSet(HashSet(prefs.getStringSet(key, emptySet()) ?: emptySet()))
 
     private companion object {
         const val DEFAULT_SLEEP_TIMER_MINUTES = 30

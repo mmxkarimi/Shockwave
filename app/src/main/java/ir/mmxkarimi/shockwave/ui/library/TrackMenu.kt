@@ -51,9 +51,9 @@ object TrackMenu {
     private fun pickPlaylist(context: Context, library: LibraryRepository, track: Track) {
         val playlistsLiveData = library.getPlaylists()
         playlistsLiveData.observeForever(object : Observer<List<Playlist>> {
-            override fun onChanged(playlists: List<Playlist>) {
+            override fun onChanged(value: List<Playlist>) {
                 playlistsLiveData.removeObserver(this)
-                val list = playlists ?: emptyList()
+                val list = value ?: emptyList()
                 val names = Array(list.size + 1) { "" }
                 for (i in list.indices) {
                     names[i] = list[i].name

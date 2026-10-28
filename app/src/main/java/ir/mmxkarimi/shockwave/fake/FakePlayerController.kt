@@ -172,8 +172,8 @@ class FakePlayerController : PlayerController {
         publish()
     }
 
-    override fun skipTo(newIndex: Int) {
-        goTo(newIndex, true)
+    override fun skipTo(index: Int) {
+        goTo(index, true)
         publish()
         startTicker()
     }
@@ -204,18 +204,18 @@ class FakePlayerController : PlayerController {
         publish()
     }
 
-    override fun removeFromQueue(at: Int) {
-        if (at < 0 || at >= queue.size) return
+    override fun removeFromQueue(index: Int) {
+        if (index < 0 || index >= queue.size) return
         queue = ArrayList(queue)
-        queue.removeAt(at)
+        queue.removeAt(index)
         if (queue.isEmpty()) {
-            index = -1
+            this.index = -1
             playing = false
             positionMs = 0L
-        } else if (at < index) {
-            index--
-        } else if (at == index) {
-            index = minOf(index, queue.size - 1)
+        } else if (index < this.index) {
+            this.index--
+        } else if (index == this.index) {
+            this.index = minOf(this.index, queue.size - 1)
             positionMs = 0L
         }
         publish()
@@ -225,15 +225,15 @@ class FakePlayerController : PlayerController {
         addToQueue(track, queue.size)
     }
 
-    override fun addToQueue(track: Track, at: Int) {
-        val pos = maxOf(0, minOf(at, queue.size))
+    override fun addToQueue(track: Track, index: Int) {
+        val pos = maxOf(0, minOf(index, queue.size))
         queue = ArrayList(queue)
         queue.add(pos, track)
-        if (index < 0) {
-            index = 0
+        if (this.index < 0) {
+            this.index = 0
             positionMs = 0L
-        } else if (pos <= index) {
-            index++
+        } else if (pos <= this.index) {
+            this.index++
         }
         publish()
     }

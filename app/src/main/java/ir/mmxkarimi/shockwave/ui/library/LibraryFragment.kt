@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -156,7 +156,7 @@ fun LibraryScreen(
             ) {
                 CollectionTile(
                     title = stringResource(R.string.library_playlists),
-                    icon = Icons.Default.PlaylistPlay,
+                    icon = Icons.AutoMirrored.Filled.PlaylistPlay,
                     count = playlists.size,
                     modifier = Modifier.weight(1f),
                     onClick = { onNavigateCollection(ScreenNavigator.Collection.PLAYLISTS) }
