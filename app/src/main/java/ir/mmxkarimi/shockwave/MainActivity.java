@@ -99,6 +99,7 @@ public class MainActivity extends AppCompatActivity
         if (savedInstanceState == null) {
             if (AudioPermission.granted(this) || PermissionPrefs.skipped(this)) {
                 if (!applyShortcut(getIntent())) showTab(Tab.HOME);
+                askNotificationsOnce();
             } else {
                 permissionFlow = true;
                 getSupportFragmentManager().beginTransaction()
@@ -249,12 +250,21 @@ public class MainActivity extends AppCompatActivity
     }
 
     private final ActivityResultLauncher<String> notificationPermission =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> { });
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (Boolean.TRUE.equals(granted)) {
+                    try {
+                        startService(new Intent(this, ir.mmxkarimi.shockwave.playback.PlaybackService.class));
+                    } catch (Exception ignored) { }
+                }
+            });
 
     /** Android 13+: the media notification needs it. Asked once, on the first play; playback works if denied. */
     private void askNotificationsOnce() {
         if (Build.VERSION.SDK_INT < 33 || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
-                == PackageManager.PERMISSION_GRANTED || PermissionPrefs.notificationsAsked(this)) {
+                == PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        if (PermissionPrefs.notificationsAsked(this) && !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
             return;
         }
         PermissionPrefs.markNotificationsAsked(this);
@@ -363,6 +373,7 @@ public class MainActivity extends AppCompatActivity
         binding.chrome.setVisibility(View.VISIBLE);
         binding.bottomScrim.setVisibility(View.VISIBLE);
         showTab(Tab.HOME);
+        askNotificationsOnce();
     }
 
     /** Remembers that the first-run screen was passed, so it is not shown on every launch. */

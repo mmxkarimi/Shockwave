@@ -13,10 +13,10 @@ android {
 
     defaultConfig {
         applicationId 'ir.mmxkarimi.shockwave'
-        minSdk 26
+        minSdk 29
         targetSdk 37
-        versionCode = Integer.parseInt("${project.findProperty('appVersionCode') ?: '1'}")
-        versionName = "${project.findProperty('appVersionName') ?: '0.2.0'}"
+        versionCode = 5
+        versionName = "0.3.0"
     }
 
     signingConfigs {

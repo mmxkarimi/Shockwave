@@ -58,7 +58,7 @@ public final class PlayerFragment extends Fragment {
     @Nullable private String paletteTrackId;
     private boolean scrubbing;
     private final Runnable resumeAutoScroll = this::onAutoScrollResume;
-    @Nullable private OutputRoute outputRoute;
+
     private boolean light;
 
     public static PlayerFragment newInstance() { return new PlayerFragment(); }
@@ -259,8 +259,8 @@ public final class PlayerFragment extends Fragment {
         b.lyricsMessageBody.setTextColor(rgb | 0xB8000000);
         b.lyricsBackToCurrent.setTextColor(text);
         b.lyricsRetry.setTextColor(text);
-        b.playerOutput.setTextColor(text);
-        androidx.core.widget.TextViewCompat.setCompoundDrawableTintList(b.playerOutput, ColorStateList.valueOf(text));
+
+
         ColorStateList icon = ColorStateList.valueOf(text);
         for (ImageButton ib : new ImageButton[]{b.playerLyricsToggle, b.playerMore, b.playerPrev, b.playerNext}) {
             ib.setImageTintList(icon);
@@ -268,37 +268,6 @@ public final class PlayerFragment extends Fragment {
         if (light) {
             b.playerHandle.getBackground().mutate().setTint(rgb | 0x52000000);
         }
-    }
-
-    @Override public void onStart() {
-        super.onStart();
-        // Output chip: an AudioDeviceCallback only while the player is visible (no background cost).
-        outputRoute = new OutputRoute(requireContext());
-        outputRoute.start(this::renderOutput);
-    }
-
-    @Override public void onStop() {
-        if (outputRoute != null) outputRoute.stop();
-        outputRoute = null;
-        super.onStop();
-    }
-
-    private void renderOutput(OutputRoute.Route r) {
-        if (b == null) return;
-        String label;
-        int icon;
-        switch (r.kind()) {
-            case BLUETOOTH:
-                label = r.name() != null ? r.name() : getString(R.string.player_output_bluetooth);
-                icon = R.drawable.player_ic_bluetooth;
-                break;
-            case WIRED: label = getString(R.string.player_output_headphones); icon = R.drawable.player_ic_headphones; break;
-            case USB: label = getString(R.string.player_output_usb); icon = R.drawable.player_ic_headphones; break;
-            default: label = getString(R.string.player_output_device); icon = R.drawable.player_ic_speaker; break;
-        }
-        b.playerOutput.setText(label);
-        b.playerOutput.setContentDescription(getString(R.string.player_output_cd, label));
-        b.playerOutput.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0);
     }
 
     private boolean isOnline() {

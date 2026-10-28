@@ -6,7 +6,8 @@
         android:shortcutId="play"
         android:enabled="true"
         android:icon="@drawable/nav_ic_play"
-        android:shortLabel="@string/shortcut_play">
+        android:shortcutShortLabel="@string/shortcut_play"
+        android:shortcutLongLabel="@string/shortcut_play">
         <intent
             android:action="ir.mmxkarimi.shockwave.SHORTCUT_PLAY"
             android:targetPackage="ir.mmxkarimi.shockwave"
@@ -16,7 +17,8 @@
         android:shortcutId="recent"
         android:enabled="true"
         android:icon="@drawable/nav_ic_history"
-        android:shortLabel="@string/shortcut_recent">
+        android:shortcutShortLabel="@string/shortcut_recent"
+        android:shortcutLongLabel="@string/shortcut_recent">
         <intent
             android:action="ir.mmxkarimi.shockwave.SHORTCUT_RECENT"
             android:targetPackage="ir.mmxkarimi.shockwave"
@@ -26,7 +28,8 @@
         android:shortcutId="favorites"
         android:enabled="true"
         android:icon="@drawable/nav_ic_heart"
-        android:shortLabel="@string/shortcut_favorites">
+        android:shortcutShortLabel="@string/shortcut_favorites"
+        android:shortcutLongLabel="@string/shortcut_favorites">
         <intent
             android:action="ir.mmxkarimi.shockwave.SHORTCUT_FAVORITES"
             android:targetPackage="ir.mmxkarimi.shockwave"

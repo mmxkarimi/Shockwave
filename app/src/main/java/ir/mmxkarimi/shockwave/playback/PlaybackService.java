@@ -47,13 +47,23 @@ public class PlaybackService extends MediaSessionService {
         // the button's play command finds a prepared player instead of an idle one.
         if (player.getMediaItemCount() > 0 && player.getPlaybackState() == Player.STATE_IDLE) player.prepare();
         MediaSession.Builder builder = new MediaSession.Builder(this, player)
-                .setBitmapLoader(new ArtworkLoader(this));
+                .setBitmapLoader(new ArtworkLoader(this))
+                .setCallback(new MediaSession.Callback() {
+                    @Override
+                    public boolean onMediaButtonEvent(MediaSession session, MediaSession.ControllerInfo controllerInfo, Intent intent) {
+                        if (player.getPlaybackState() == Player.STATE_IDLE && player.getMediaItemCount() > 0) {
+                            player.prepare();
+                        }
+                        return super.onMediaButtonEvent(session, controllerInfo, intent);
+                    }
+                });
         Intent launch = getPackageManager().getLaunchIntentForPackage(getPackageName());
         if (launch != null) {
             builder.setSessionActivity(PendingIntent.getActivity(this, 0, launch,
                     PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT));
         }
         session = builder.build();
+        addSession(session);
         // Our notification (prev / play-pause / next, progress bar; notif_icon in the status bar).
         setMediaNotificationProvider(new PlaybackNotificationProvider(this));
         player.addListener(serviceWatcher);
@@ -84,6 +94,7 @@ public class PlaybackService extends MediaSessionService {
         player.removeListener(serviceWatcher);
         PlayerHolder.store(this).saveNow();
         if (session != null) {
+            removeSession(session);
             session.release(); // the shared player stays alive for the controller
             session = null;
         }

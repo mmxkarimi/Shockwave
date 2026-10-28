@@ -287,23 +287,5 @@
                 android:src="@drawable/player_ic_next" />
 
         </LinearLayout>
-
-        <!-- Output chip -->
-        <TextView
-            android:id="@+id/player_output"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/player_chip_bg"
-            android:drawablePadding="10dp"
-            android:gravity="center_vertical"
-            android:paddingHorizontal="20dp"
-            android:text="@string/player_output_device"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            app:drawableStartCompat="@drawable/player_ic_speaker"
-            app:drawableTint="#FFFFFF"
-            xmlns:app="http://schemas.android.com/apk/res-auto" />
     </LinearLayout>
 </FrameLayout>
