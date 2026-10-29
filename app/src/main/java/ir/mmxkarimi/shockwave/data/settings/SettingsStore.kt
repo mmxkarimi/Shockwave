@@ -17,6 +17,7 @@ class SettingsStore(context: Context) {
     private val prefs: SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
     private val theme = MutableLiveData(readEnum(K_THEME, ThemeMode.SYSTEM))
+    private val dynamicColor = MutableLiveData(prefs.getBoolean(K_DYNAMIC_COLOR, true))
     private val artworkColors = MutableLiveData(prefs.getBoolean(K_ARTWORK_COLORS, true))
     private val language = MutableLiveData(prefs.getString(K_LANGUAGE, "") ?: "")
     private val lyricsOnline = MutableLiveData(prefs.getBoolean(K_LYRICS_ONLINE, true))
@@ -31,6 +32,14 @@ class SettingsStore(context: Context) {
     fun setTheme(value: ThemeMode) {
         prefs.edit().putString(K_THEME, value.name).apply()
         publish(theme, value)
+    }
+
+    /** Use Material You dynamic wallpaper colors on Android 12+. */
+    fun dynamicColor(): LiveData<Boolean> = dynamicColor
+
+    fun setDynamicColor(value: Boolean) {
+        prefs.edit().putBoolean(K_DYNAMIC_COLOR, value).apply()
+        publish(dynamicColor, value)
     }
 
     /** Tint the player with colors taken from the artwork. */
@@ -114,6 +123,7 @@ class SettingsStore(context: Context) {
 
         private const val PREFS = "settings"
         private const val K_THEME = "theme"
+        private const val K_DYNAMIC_COLOR = "dynamic_color"
         private const val K_ARTWORK_COLORS = "artwork_colors"
         private const val K_LANGUAGE = "language"
         private const val K_LYRICS_ONLINE = "lyrics_online"

@@ -68,8 +68,7 @@ internal class ArtworkLoader(context: Context) : BitmapLoader {
                     } else {
                         uri
                     }
-                    val bmp = resolver.loadThumbnail(targetUri, Size(MAX_PX, MAX_PX), null)
-                    if (bmp != null) return@Callable bmp
+                    return@Callable resolver.loadThumbnail(targetUri, Size(MAX_PX, MAX_PX), null)
                 } catch (ignored: Exception) {
                 }
             }

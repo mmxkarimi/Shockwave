@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -90,6 +91,7 @@ fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
             .verticalScroll(scrollState)
             .padding(bottom = 120.dp)
     ) {
@@ -97,27 +99,22 @@ fun SettingsScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(start = 12.dp, end = 16.dp, top = 16.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
+            IconButton(
                 onClick = onBack,
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                modifier = Modifier.size(42.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                modifier = Modifier.size(42.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.nav_back),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.nav_back),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(24.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             Text(
                 text = stringResource(R.string.settings_title),
@@ -202,10 +199,22 @@ fun SettingsScreen(
                     }
                 }
 
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    ExpressiveGroupItemRow(
+                        title = stringResource(R.string.settings_dynamic_color),
+                        subtitle = stringResource(R.string.settings_dynamic_color_sub),
+                        trailingContent = {
+                            Switch(
+                                checked = s.dynamicColor,
+                                onCheckedChange = { vm.setDynamicColor(it) }
+                            )
+                        }
+                    )
+                }
+
                 ExpressiveGroupItemRow(
                     title = stringResource(R.string.settings_artwork_colors),
                     subtitle = stringResource(R.string.settings_artwork_colors_sub),
-                    icon = Icons.Default.Palette,
                     trailingContent = {
                         Switch(
                             checked = s.artworkColors,
@@ -217,7 +226,6 @@ fun SettingsScreen(
                 ExpressiveGroupItemRow(
                     title = stringResource(R.string.settings_battery_saver),
                     subtitle = stringResource(R.string.settings_battery_saver_sub),
-                    icon = Icons.Default.BatteryChargingFull,
                     trailingContent = {
                         Switch(
                             checked = s.batterySaver,
@@ -291,7 +299,6 @@ fun SettingsScreen(
                 ExpressiveGroupItemRow(
                     title = stringResource(R.string.settings_lyrics_online),
                     subtitle = stringResource(R.string.settings_lyrics_online_sub),
-                    icon = Icons.Default.Lyrics,
                     trailingContent = {
                         Switch(
                             checked = s.onlineLyrics,
@@ -309,7 +316,6 @@ fun SettingsScreen(
                     title = stringResource(R.string.settings_rescan),
                     subtitle = scanStatusMessage
                         ?: (if (isScanning) stringResource(R.string.settings_scanning) else stringResource(R.string.settings_rescan_sub)),
-                    icon = Icons.Default.Refresh,
                     onClick = {
                         if (!isScanning) {
                             scanStatusMessage = context.getString(R.string.settings_scanning)
@@ -353,8 +359,7 @@ fun SettingsScreen(
 
                 ExpressiveGroupItemRow(
                     title = stringResource(R.string.settings_folders),
-                    subtitle = stringResource(R.string.settings_folders_all),
-                    icon = Icons.Default.Folder
+                    subtitle = stringResource(R.string.settings_folders_all)
                 )
             }
 
@@ -364,8 +369,7 @@ fun SettingsScreen(
             ExpressiveGroupCard(title = stringResource(R.string.settings_about)) {
                 ExpressiveGroupItemRow(
                     title = stringResource(R.string.app_name),
-                    subtitle = stringResource(R.string.settings_version, "0.5.0 Expressive"),
-                    icon = Icons.Default.Info
+                    subtitle = stringResource(R.string.settings_version, "0.6.0")
                 )
             }
         }
@@ -462,7 +466,7 @@ class SettingsFragment : Fragment() {
             setContent {
                 val state by vm.getState().observeAsState()
                 val currentMode = state?.theme?.let { ThemeApplier.toMode(it) } ?: ThemeMode.SYSTEM
-                ShockwaveTheme(mode = currentMode) {
+                ShockwaveTheme(mode = currentMode, dynamicColor = state?.dynamicColor) {
                     SettingsScreen(
                         vm = vm,
                         onBack = {

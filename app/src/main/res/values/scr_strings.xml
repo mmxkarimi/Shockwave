@@ -43,7 +43,7 @@
     <string name="library_history">History</string>
     <string name="library_recently_saved">Recently saved</string>
     <string name="library_play_liked">Play liked songs</string>
-    <string name="library_liked_empty">Tap ♥ on any song to keep it here</string>
+    <string name="library_liked_empty">Tap heart icon on any song to keep it here</string>
     <string name="library_history_empty">Songs you play will show up here</string>
     <string name="library_playlist_empty">This playlist is empty</string>
     <string name="library_empty">Nothing here yet</string>
@@ -62,6 +62,8 @@
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_theme_black">Black</string>
+    <string name="settings_dynamic_color">Dynamic color</string>
+    <string name="settings_dynamic_color_sub">Use colors from your wallpaper (Material You)</string>
     <string name="settings_artwork_colors">Colors from artwork</string>
     <string name="settings_artwork_colors_sub">Tint the player with the cover’s colors</string>
     <string name="settings_language">Language</string>

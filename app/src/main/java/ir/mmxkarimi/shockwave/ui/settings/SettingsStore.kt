@@ -16,6 +16,9 @@ interface SettingsStore {
     fun getTheme(): Theme
     fun setTheme(theme: Theme)
 
+    fun isDynamicColor(): Boolean
+    fun setDynamicColor(on: Boolean)
+
     fun isArtworkColors(): Boolean
     fun setArtworkColors(on: Boolean)
 

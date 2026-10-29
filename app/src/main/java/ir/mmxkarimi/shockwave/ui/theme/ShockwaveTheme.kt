@@ -8,8 +8,10 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
 
 // Material 3 Expressive Fallback Seed: #C6F135
 val LimePrimaryDark = Color(0xFFC6F135)
@@ -110,7 +112,7 @@ val LimeBlackColorScheme = darkColorScheme(
 fun ShockwaveTheme(
     mode: ThemeMode = ThemeMode.SYSTEM,
     accentScheme: AccentScheme? = null,
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean? = null,
     content: @Composable () -> Unit
 ) {
     val dark = when (mode) {
@@ -119,7 +121,8 @@ fun ShockwaveTheme(
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
     val context = LocalContext.current
-    val useDynamic = dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && mode != ThemeMode.BLACK
+    val isDynamicEnabled = dynamicColor ?: remember(context) { PrefsSettingsStore(context).isDynamicColor() }
+    val useDynamic = isDynamicEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && mode != ThemeMode.BLACK
 
     val baseScheme = when {
         mode == ThemeMode.BLACK -> LimeBlackColorScheme

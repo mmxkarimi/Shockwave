@@ -62,6 +62,8 @@
     <string name="settings_theme_light">روشن</string>
     <string name="settings_theme_dark">تیره</string>
     <string name="settings_theme_black">سیاه</string>
+    <string name="settings_dynamic_color">رنگ پویا</string>
+    <string name="settings_dynamic_color_sub">استفاده از رنگ‌های تصویر زمینه (متریال یو)</string>
     <string name="settings_artwork_colors">رنگ از کاور</string>
     <string name="settings_artwork_colors_sub">پخش‌کننده رنگ کاور را می‌گیرد</string>
     <string name="settings_language">زبان</string>

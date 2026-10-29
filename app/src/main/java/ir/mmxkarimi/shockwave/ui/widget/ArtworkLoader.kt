@@ -77,8 +77,7 @@ class ArtworkLoader private constructor(context: Context) {
                     } else {
                         u
                     }
-                    val bmp = resolver.loadThumbnail(targetUri, Size(sizePx, sizePx), null)
-                    if (bmp != null) return bmp
+                    return resolver.loadThumbnail(targetUri, Size(sizePx, sizePx), null)
                 } catch (ignored: Exception) {
                 }
             }

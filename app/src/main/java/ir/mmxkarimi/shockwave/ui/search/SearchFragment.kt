@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilterChip
@@ -63,6 +64,7 @@ import ir.mmxkarimi.shockwave.ui.theme.ShockwaveTheme
 @Composable
 fun SearchScreen(
     vm: SearchViewModel,
+    onBack: () -> Unit,
     onNavigateTrackList: (ScreenNavigator.TrackList, String) -> Unit
 ) {
     val query by vm.getQuery().observeAsState("")
@@ -79,27 +81,46 @@ fun SearchScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
         ) {
-        // Search Input Field
-        OutlinedTextField(
-            value = query,
-            onValueChange = { vm.setQuery(it) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            placeholder = { Text(text = stringResource(R.string.search_hint)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.Default.Search, contentDescription = null)
-            },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { vm.setQuery("") }) {
-                        Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
-                    }
+            // Top Navigation Row with Search Input Field and Transparent Back Button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(42.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.nav_back),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
-            },
-            singleLine = true,
-            shape = RoundedCornerShape(24.dp)
-        )
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { vm.setQuery(it) },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text(text = stringResource(R.string.search_hint)) },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Search, contentDescription = null)
+                    },
+                    trailingIcon = {
+                        if (query.isNotEmpty()) {
+                            IconButton(onClick = { vm.setQuery("") }) {
+                                Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(24.dp)
+                )
+            }
 
         // Filter chips (All, Tracks, Albums, Artists, Playlists)
         LazyRow(
@@ -280,9 +301,17 @@ class SearchFragment : Fragment() {
                 val theme = remember { PrefsSettingsStore(requireContext()).getTheme() }
                 val currentMode = ThemeApplier.toMode(theme)
 
-                                ShockwaveTheme(mode = currentMode) {
+                ShockwaveTheme(mode = currentMode) {
                     SearchScreen(
                         vm = vm,
+                        onBack = {
+                            val nav = (activity as? ScreenNavigator)
+                            if (nav != null) {
+                                nav.openTab(ScreenNavigator.Tab.HOME)
+                            } else {
+                                parentFragmentManager.popBackStack()
+                            }
+                        },
                         onNavigateTrackList = { kind, id ->
                             Screens.openTrackList(this@SearchFragment, kind, id)
                         }

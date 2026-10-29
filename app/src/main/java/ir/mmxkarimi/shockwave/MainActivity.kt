@@ -79,8 +79,6 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         val mode = ThemeApplier.toMode(theme)
@@ -134,6 +132,7 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
         val composeView = ComposeView(this).apply {
             setContent {
                 val playback by shell.getPlayback().observeAsState()
+                val currentTab by shell.getTab().observeAsState(Tab.HOME)
                 val accent by ThemeController.get(this@MainActivity).accent().observeAsState()
                 val theme = remember { PrefsSettingsStore(this@MainActivity).getTheme() }
                 val currentMode = ThemeApplier.toMode(theme)
@@ -153,7 +152,7 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                             .navigationBarsPadding(),
                         contentAlignment = Alignment.BottomCenter
                     ) {
-                        if (track != null) {
+                        if (track != null && currentTab != Tab.SETTINGS) {
                             MiniPlayerBar(
                                 track = track,
                                 isPlaying = playback?.playing == true,
@@ -285,6 +284,7 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
             .replace(R.id.screen_container, f)
             .commit()
         shell.selectTab(tab)
+        updateBackToHome()
     }
 
     override fun openTrackList(kind: TrackList, id: String?) {

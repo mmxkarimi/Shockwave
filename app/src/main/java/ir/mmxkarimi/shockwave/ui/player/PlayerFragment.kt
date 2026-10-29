@@ -151,7 +151,6 @@ private fun PlaybackState.buffering(): Boolean = buffering
 private fun PlaybackState.shuffleEnabled(): Boolean = shuffleEnabled
 private fun PlaybackState.repeatMode(): RepeatMode = repeatMode
 private fun PlaybackState.currentTrack(): Track? = currentTrack
-private fun PlaybackState.hasNext(): Boolean = hasNext()
 private fun Lyrics.lines(): List<LyricLine> = lines
 private fun LyricLine.text(): String = text
 

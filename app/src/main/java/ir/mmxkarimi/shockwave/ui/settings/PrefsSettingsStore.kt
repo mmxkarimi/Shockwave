@@ -22,6 +22,14 @@ class PrefsSettingsStore(
         data.setTheme(ThemeMode.valueOf(theme.name))
     }
 
+    override fun isDynamicColor(): Boolean {
+        return data.dynamicColor().value ?: true
+    }
+
+    override fun setDynamicColor(on: Boolean) {
+        data.setDynamicColor(on)
+    }
+
     override fun isArtworkColors(): Boolean {
         return data.artworkColors().value ?: true
     }

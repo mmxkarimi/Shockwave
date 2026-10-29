@@ -10,6 +10,7 @@ class SettingsViewModel(private val store: SettingsStore) : ViewModel() {
 
     data class State(
         val theme: SettingsStore.Theme,
+        val dynamicColor: Boolean,
         val artworkColors: Boolean,
         val language: String,
         val onlineLyrics: Boolean,
@@ -26,6 +27,7 @@ class SettingsViewModel(private val store: SettingsStore) : ViewModel() {
     private fun publish() {
         stateLiveData.value = State(
             theme = store.getTheme(),
+            dynamicColor = store.isDynamicColor(),
             artworkColors = store.isArtworkColors(),
             language = store.getLanguage(),
             onlineLyrics = store.isOnlineLyrics(),
@@ -39,6 +41,11 @@ class SettingsViewModel(private val store: SettingsStore) : ViewModel() {
     fun setTheme(t: SettingsStore.Theme) {
         store.setTheme(t)
         ThemeApplier.applyNightMode(t)
+        publish()
+    }
+
+    fun setDynamicColor(on: Boolean) {
+        store.setDynamicColor(on)
         publish()
     }
 
