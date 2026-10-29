@@ -1,13 +1,17 @@
 package ir.mmxkarimi.shockwave.ui.widget
 
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import android.util.LruCache
+import android.util.Size
 import androidx.annotation.MainThread
 import java.io.InputStream
 import java.util.concurrent.ExecutorService
@@ -65,6 +69,20 @@ class ArtworkLoader private constructor(context: Context) {
     private fun decode(uri: String, sizePx: Int): Bitmap? {
         return try {
             val u = Uri.parse(uri)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
+                    val albumId = u.lastPathSegment?.toLongOrNull()
+                    val targetUri = if (albumId != null && albumId > 0 && uri.contains("albumart")) {
+                        ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, albumId)
+                    } else {
+                        u
+                    }
+                    val bmp = resolver.loadThumbnail(targetUri, Size(sizePx, sizePx), null)
+                    if (bmp != null) return bmp
+                } catch (ignored: Exception) {
+                }
+            }
+
             val o = BitmapFactory.Options().apply { inJustDecodeBounds = true }
             resolver.openInputStream(u)?.use { `in` ->
                 BitmapFactory.decodeStream(`in`, null, o)

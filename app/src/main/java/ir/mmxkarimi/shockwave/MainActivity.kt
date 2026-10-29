@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -46,6 +47,8 @@ import ir.mmxkarimi.shockwave.ui.search.SearchFragment
 import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
 import ir.mmxkarimi.shockwave.ui.settings.SettingsFragment
 import ir.mmxkarimi.shockwave.ui.settings.ThemeApplier
+import androidx.core.view.WindowCompat
+import ir.mmxkarimi.shockwave.ui.theme.ThemeMode
 import ir.mmxkarimi.shockwave.ui.theme.ShockwaveTheme
 import ir.mmxkarimi.shockwave.ui.theme.ThemeController
 
@@ -75,8 +78,23 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
         setTheme(ThemeApplier.themeRes(theme))
         super.onCreate(savedInstanceState)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+        val mode = ThemeApplier.toMode(theme)
+        val isDark = when (mode) {
+            ThemeMode.LIGHT -> false
+            ThemeMode.DARK, ThemeMode.BLACK -> true
+            ThemeMode.SYSTEM -> (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        }
+        insetsController.isAppearanceLightStatusBars = !isDark
+        insetsController.isAppearanceLightNavigationBars = !isDark
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.bottomScrim.visibility = View.GONE
 
         shell = ViewModelProvider(
             this,
@@ -117,11 +135,18 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
             setContent {
                 val playback by shell.getPlayback().observeAsState()
                 val accent by ThemeController.get(this@MainActivity).accent().observeAsState()
+                val theme = remember { PrefsSettingsStore(this@MainActivity).getTheme() }
+                val currentMode = ThemeApplier.toMode(theme)
 
-                val track = playback?.currentTrack
-                val progressFraction = PlayerFormat.fraction(playback?.positionMs ?: 0L, playback?.durationMs ?: 0L)
+                val recentTracks by (application as ShockwaveApp).getContainer().library.getRecentlySaved().observeAsState(emptyList())
+                val track = playback?.currentTrack ?: recentTracks.firstOrNull()
+                val progressFraction = if (playback?.currentTrack != null) {
+                    PlayerFormat.fraction(playback?.positionMs ?: 0L, playback?.durationMs ?: 0L)
+                } else {
+                    0f
+                }
 
-                ShockwaveTheme(accentScheme = accent) {
+                ShockwaveTheme(mode = currentMode, accentScheme = accent) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -133,9 +158,26 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                                 track = track,
                                 isPlaying = playback?.playing == true,
                                 progressFraction = progressFraction,
-                                onClick = { openFullPlayer() },
-                                onPlayPause = { shell.togglePlayPause() },
-                                onNext = { shell.next() }
+                                onClick = {
+                                    if (playback?.currentTrack == null) {
+                                        (application as ShockwaveApp).getContainer().player.play(
+                                            listOf(track), 0, getString(R.string.library_recently_saved)
+                                        )
+                                    }
+                                    openFullPlayer()
+                                },
+                                onPlayPause = {
+                                    if (playback?.currentTrack == null) {
+                                        (application as ShockwaveApp).getContainer().player.play(
+                                            listOf(track), 0, getString(R.string.library_recently_saved)
+                                        )
+                                    } else {
+                                        shell.togglePlayPause()
+                                    }
+                                },
+                                onNext = {
+                                    if (playback?.currentTrack != null) shell.next()
+                                }
                             )
                         }
                     }
@@ -147,7 +189,7 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
 
     private fun updateChromeVisibility() {
         binding.chrome.visibility = if (permissionFlow) View.GONE else View.VISIBLE
-        binding.bottomScrim.visibility = if (permissionFlow) View.GONE else View.VISIBLE
+        binding.bottomScrim.visibility = View.GONE
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,6 +36,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import ir.mmxkarimi.shockwave.R
+import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
+import ir.mmxkarimi.shockwave.ui.settings.ThemeApplier
 import ir.mmxkarimi.shockwave.ui.theme.ShockwaveTheme
 
 /** First run permission screen written with Jetpack Compose. */
@@ -57,13 +61,18 @@ fun PermissionContent(
 
     val blocked = askedOnce && !shouldShowRationale()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
         Text(
             text = stringResource(R.string.nav_perm_title),
             style = MaterialTheme.typography.headlineMedium,
@@ -123,6 +132,7 @@ fun PermissionContent(
         }
     }
 }
+}
 
 class PermissionFragment : Fragment() {
 
@@ -137,7 +147,10 @@ class PermissionFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                ShockwaveTheme {
+                val theme = remember { PrefsSettingsStore(requireContext()).getTheme() }
+                val currentMode = ThemeApplier.toMode(theme)
+
+                ShockwaveTheme(mode = currentMode) {
                     PermissionContent(
                         onDone = { done() },
                         shouldShowRationale = {

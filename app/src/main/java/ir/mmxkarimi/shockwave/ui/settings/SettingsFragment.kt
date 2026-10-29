@@ -71,6 +71,7 @@ import ir.mmxkarimi.shockwave.ui.components.ExpressiveGroupCard
 import ir.mmxkarimi.shockwave.ui.components.ExpressiveGroupItemRow
 import ir.mmxkarimi.shockwave.ui.nav.ScreenNavigator
 import ir.mmxkarimi.shockwave.ui.nav.Screens
+import ir.mmxkarimi.shockwave.ui.theme.ThemeMode
 import ir.mmxkarimi.shockwave.ui.theme.ShockwaveTheme
 
 @Composable
@@ -128,55 +129,16 @@ fun SettingsScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Brand & Engine Status Card
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-        ) {
-            Row(
-                modifier = Modifier.padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(52.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.GraphicEq,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column {
-                    Text(
-                        text = "Shockwave Expressive Engine",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Media3 ExoPlayer · Material 3 Expressive",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f)
-                    )
-                }
-            }
-        }
+        Spacer(modifier = Modifier.height(4.dp))
 
         state?.let { s ->
+            val onSelectTheme: (SettingsStore.Theme) -> Unit = { target ->
+                val before = s.theme
+                vm.setTheme(target)
+                if ((before == SettingsStore.Theme.BLACK) != (target == SettingsStore.Theme.BLACK)) {
+                    (context as? android.app.Activity)?.recreate()
+                }
+            }
             Spacer(modifier = Modifier.height(10.dp))
 
             // Grouped Island 1: Appearance & Theme
@@ -199,7 +161,7 @@ fun SettingsScreen(
                             icon = Icons.Default.BrightnessAuto,
                             previewBg = Color(0xFF252620),
                             previewAccent = Color(0xFFC6F135),
-                            onClick = { vm.setTheme(SettingsStore.Theme.SYSTEM) },
+                            onClick = { onSelectTheme(SettingsStore.Theme.SYSTEM) },
                             modifier = Modifier.weight(1f)
                         )
                         ThemeVisualCard(
@@ -209,7 +171,7 @@ fun SettingsScreen(
                             icon = Icons.Default.LightMode,
                             previewBg = Color(0xFFFDF9EE),
                             previewAccent = Color(0xFF516600),
-                            onClick = { vm.setTheme(SettingsStore.Theme.LIGHT) },
+                            onClick = { onSelectTheme(SettingsStore.Theme.LIGHT) },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -224,7 +186,7 @@ fun SettingsScreen(
                             icon = Icons.Default.DarkMode,
                             previewBg = Color(0xFF13140F),
                             previewAccent = Color(0xFFC6F135),
-                            onClick = { vm.setTheme(SettingsStore.Theme.DARK) },
+                            onClick = { onSelectTheme(SettingsStore.Theme.DARK) },
                             modifier = Modifier.weight(1f)
                         )
                         ThemeVisualCard(
@@ -234,7 +196,7 @@ fun SettingsScreen(
                             icon = Icons.Default.Contrast,
                             previewBg = Color(0xFF000000),
                             previewAccent = Color(0xFFC6F135),
-                            onClick = { vm.setTheme(SettingsStore.Theme.BLACK) },
+                            onClick = { onSelectTheme(SettingsStore.Theme.BLACK) },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -405,11 +367,6 @@ fun SettingsScreen(
                     subtitle = stringResource(R.string.settings_version, "0.5.0 Expressive"),
                     icon = Icons.Default.Info
                 )
-                ExpressiveGroupItemRow(
-                    title = "Media3 ExoPlayer",
-                    subtitle = "High-fidelity audio decoding & Android 15+ rich notifications",
-                    icon = Icons.Default.GraphicEq
-                )
             }
         }
     }
@@ -503,7 +460,9 @@ class SettingsFragment : Fragment() {
 
         return ComposeView(requireContext()).apply {
             setContent {
-                ShockwaveTheme {
+                val state by vm.getState().observeAsState()
+                val currentMode = state?.theme?.let { ThemeApplier.toMode(it) } ?: ThemeMode.SYSTEM
+                ShockwaveTheme(mode = currentMode) {
                     SettingsScreen(
                         vm = vm,
                         onBack = {

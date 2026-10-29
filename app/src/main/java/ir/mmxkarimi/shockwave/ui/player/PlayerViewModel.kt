@@ -107,6 +107,7 @@ class PlayerViewModel(
     fun seekTo(positionMs: Long) = player.seekTo(positionMs)
     fun toggleShuffle() = player.toggleShuffle()
     fun cycleRepeatMode() = player.cycleRepeat()
+    fun cycleRepeat() = player.cycleRepeat()
 
     fun toggleLike() {
         val t = currentTrackLiveData.value ?: return
@@ -134,6 +135,11 @@ class PlayerViewModel(
 
     companion object {
         const val WAVEFORM_BARS: Int = 120
+
+        @JvmStatic
+        fun showOfflineRetry(lyrics: Lyrics?, online: Boolean): Boolean {
+            return !online && (lyrics == null || lyrics.lines.isEmpty())
+        }
 
         @JvmStatic
         fun factory(

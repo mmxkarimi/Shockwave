@@ -1,10 +1,14 @@
 package ir.mmxkarimi.shockwave.playback
 
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.util.Size
 import androidx.annotation.OptIn
 import androidx.media3.common.util.BitmapLoader
 import androidx.media3.common.util.UnstableApi
@@ -54,6 +58,20 @@ internal class ArtworkLoader(context: Context) : BitmapLoader {
             if (ContentResolver.SCHEME_CONTENT != scheme && ContentResolver.SCHEME_FILE != scheme
                     && ContentResolver.SCHEME_ANDROID_RESOURCE != scheme) {
                 throw IOException("Unsupported artwork scheme: $scheme")
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
+                    val uriStr = uri.toString()
+                    val albumId = uri.lastPathSegment?.toLongOrNull()
+                    val targetUri = if (albumId != null && albumId > 0 && uriStr.contains("albumart")) {
+                        ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, albumId)
+                    } else {
+                        uri
+                    }
+                    val bmp = resolver.loadThumbnail(targetUri, Size(MAX_PX, MAX_PX), null)
+                    if (bmp != null) return@Callable bmp
+                } catch (ignored: Exception) {
+                }
             }
             val bounds = BitmapFactory.Options()
             bounds.inJustDecodeBounds = true

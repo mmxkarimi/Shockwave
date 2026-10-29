@@ -38,6 +38,7 @@ class SettingsViewModel(private val store: SettingsStore) : ViewModel() {
 
     fun setTheme(t: SettingsStore.Theme) {
         store.setTheme(t)
+        ThemeApplier.applyNightMode(t)
         publish()
     }
 
