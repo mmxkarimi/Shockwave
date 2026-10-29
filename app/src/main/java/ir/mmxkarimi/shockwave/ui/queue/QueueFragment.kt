@@ -216,5 +216,11 @@ class QueueFragment : BottomSheetDialogFragment() {
 
         @JvmStatic
         fun newInstance(): QueueFragment = QueueFragment()
+
+        @JvmStatic
+        fun show(fm: androidx.fragment.app.FragmentManager) {
+            if (fm.findFragmentByTag(TAG) != null) return
+            newInstance().show(fm, TAG)
+        }
     }
 }

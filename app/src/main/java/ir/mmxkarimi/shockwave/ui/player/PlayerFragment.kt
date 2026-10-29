@@ -118,6 +118,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import ir.mmxkarimi.shockwave.R
+import ir.mmxkarimi.shockwave.domain.model.LyricLine
 import ir.mmxkarimi.shockwave.domain.model.Lyrics
 import ir.mmxkarimi.shockwave.domain.model.PlaybackState
 import ir.mmxkarimi.shockwave.domain.model.RepeatMode
@@ -128,6 +129,7 @@ import ir.mmxkarimi.shockwave.ui.player.lyrics.LyricsScrollPolicy
 import ir.mmxkarimi.shockwave.ui.playlist.AddToPlaylistSheet
 import ir.mmxkarimi.shockwave.ui.queue.QueueFragment
 import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
+import ir.mmxkarimi.shockwave.ui.settings.ThemeApplier
 import ir.mmxkarimi.shockwave.ui.theme.ColorExtractor
 import ir.mmxkarimi.shockwave.ui.theme.ShockwaveTheme
 import ir.mmxkarimi.shockwave.ui.theme.Tokens
@@ -137,9 +139,6 @@ import ir.mmxkarimi.shockwave.ui.widget.WaveMath
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.min
-
-
-import ir.mmxkarimi.shockwave.ui.settings.ThemeApplier
 
 private fun Track.id(): String = id
 private fun Track.title(): String = title
@@ -153,8 +152,8 @@ private fun PlaybackState.shuffleEnabled(): Boolean = shuffleEnabled
 private fun PlaybackState.repeatMode(): RepeatMode = repeatMode
 private fun PlaybackState.currentTrack(): Track? = currentTrack
 private fun PlaybackState.hasNext(): Boolean = hasNext()
-private fun Lyrics.lines(): List<Lyrics.Line> = lines
-private fun Lyrics.Line.text(): String = text
+private fun Lyrics.lines(): List<LyricLine> = lines
+private fun LyricLine.text(): String = text
 
 // ------------------------------------------------------------------------------------------------
 // Colors shared by every piece of the screen
@@ -417,7 +416,7 @@ fun FullPlayerScreen(
                 val side = (min(maxWidth.value, maxHeight.value).dp - 16.dp).coerceAtLeast(0.dp)
                 val artworkUpdated by rememberUpdatedState(onArtwork)
 
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = !showLyrics,
                     enter = fadeIn(tween(200)),
                     exit = ExitTransition.None,
@@ -788,7 +787,7 @@ private fun LyricsStage(
     var showBack by remember { mutableStateOf(false) }
     var resumeToken by remember { mutableIntStateOf(0) }
     val active by rememberUpdatedState(activeLine)
-    val lines = lyrics?.lines() ?: emptyList()
+    val lines: List<LyricLine> = lyrics?.lines ?: emptyList()
 
     suspend fun goTo(i: Int) {
         if (i < 0 || i >= lines.size) return
@@ -885,14 +884,11 @@ private fun LyricsStage(
             ) {
                 itemsIndexed(lines) { index, line ->
                     val isActive = index == activeLine
-                    val lineText = line.text()
-                    val isRtl = remember(lineText) {
-                        val first = lineText.firstOrNull { !it.isWhitespace() }
-                        first != null && (
-                            Character.getDirectionality(first) == Character.DIRECTIONALITY_RIGHT_TO_LEFT ||
-                            Character.getDirectionality(first) == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
-                        )
-                    }
+                    val lineText = line.text
+                    val isRtl = lineText.firstOrNull { !it.isWhitespace() }?.let {
+                        Character.getDirectionality(it) == Character.DIRECTIONALITY_RIGHT_TO_LEFT ||
+                        Character.getDirectionality(it) == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
+                    } == true
                     Text(
                         text = lineText,
                         style = TextStyle(
@@ -914,7 +910,7 @@ private fun LyricsStage(
                 }
             }
 
-            AnimatedVisibility(
+            androidx.compose.animation.AnimatedVisibility(
                 visible = showBack,
                 enter = fadeIn(),
                 exit = fadeOut(),
@@ -1054,7 +1050,7 @@ class PlayerFragment : Fragment() {
                         onClose = { collapse() },
                         onOpenQueue = {
                             val nav = PlayerNavigator.from(requireContext())
-                            if (nav != null) nav.openQueue() else QueueFragment.show(parentFragmentManager)
+                            if (nav != null) nav.openQueue() else QueueFragment.newInstance().show(parentFragmentManager, QueueFragment.TAG)
                         },
                         onAddToPlaylist = { track ->
                             AddToPlaylistSheet.show(parentFragmentManager, track)
