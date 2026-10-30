@@ -481,12 +481,6 @@ fun FullPlayerScreen(
                     )
                 }
             }
-                        motion = motion,
-                        onLineClick = { vm.seekToLine(it) },
-                        onRetry = { vm.retryLyrics() }
-                    )
-                }
-            }
 
             // ---- Title row ----
             Row(
