@@ -1,6 +1,8 @@
 package ir.mmxkarimi.shockwave.data.repository
 
+import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.LiveData
@@ -24,6 +26,7 @@ import ir.mmxkarimi.shockwave.domain.model.Track
 import ir.mmxkarimi.shockwave.domain.repository.Callback
 import ir.mmxkarimi.shockwave.domain.repository.LibraryAdmin
 import ir.mmxkarimi.shockwave.domain.repository.LibraryRepository
+import java.io.File
 import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -33,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Also the [LibraryAdmin]: library scanning and the remaining playlist edits (rename, delete, remove, reorder).
  */
 class SqliteLibraryRepository(
+    private val context: Context,
     private val helper: DbHelper,
     private val io: Executor,
     private val notifier: ChangeNotifier,
@@ -139,7 +143,26 @@ class SqliteLibraryRepository(
     }
 
     override fun deleteTrack(trackId: String) {
-        write(ChangeNotifier.TRACKS) { TrackQueries(it).deleteByIds(listOf(trackId)) }
+        write(ChangeNotifier.TRACKS) { db ->
+            val track = TrackQueries(db).getById(trackId)
+            val uriStr = track?.mediaUri
+            if (!uriStr.isNullOrEmpty()) {
+                try {
+                    val uri = Uri.parse(uriStr)
+                    if (uri.scheme == "content") {
+                        context.contentResolver.delete(uri, null, null)
+                    } else if (uri.scheme == "file") {
+                        val path = uri.path
+                        if (path != null) {
+                            File(path).delete()
+                        }
+                    }
+                } catch (_: Exception) {
+                    // Gracefully ignore Scoped Storage or security exceptions
+                }
+            }
+            TrackQueries(db).deleteByIds(listOf(trackId))
+        }
     }
 
     override fun removeFromPlaylist(playlistId: String, trackId: String) {

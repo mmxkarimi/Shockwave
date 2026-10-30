@@ -108,6 +108,8 @@ class PlayerViewModel(
     fun toggleShuffle() = player.toggleShuffle()
     fun cycleRepeatMode() = player.cycleRepeat()
     fun cycleRepeat() = player.cycleRepeat()
+    fun playNext(track: Track) = player.playNext(track)
+    fun addToQueue(track: Track) = player.addToQueue(track)
 
     fun toggleLike() {
         val t = currentTrackLiveData.value ?: return

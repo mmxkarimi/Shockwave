@@ -34,12 +34,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -82,9 +86,11 @@ import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.domain.model.Playlist
 import ir.mmxkarimi.shockwave.domain.model.Track
 import ir.mmxkarimi.shockwave.ui.components.ExpressiveSubheaderRow
+import ir.mmxkarimi.shockwave.ui.components.TrackDetailsDialog
 import ir.mmxkarimi.shockwave.ui.components.TrackRow
 import ir.mmxkarimi.shockwave.ui.library.AsyncArtworkImage
 import ir.mmxkarimi.shockwave.ui.library.LibraryViewModel
+import ir.mmxkarimi.shockwave.ui.components.shareTrack
 import ir.mmxkarimi.shockwave.ui.nav.ScreenNavigator
 import ir.mmxkarimi.shockwave.ui.nav.Screens
 import ir.mmxkarimi.shockwave.ui.playlist.AddToPlaylistSheet
@@ -279,8 +285,10 @@ fun TracksPage(
     var sortMenuOpen by remember { mutableStateOf(false) }
     var trackActionTarget by remember { mutableStateOf<Track?>(null) }
     var trackToDelete by remember { mutableStateOf<Track?>(null) }
+    var trackForDetails by remember { mutableStateOf<Track?>(null) }
     val context = LocalContext.current
     val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
+    val player = remember { Screens.container(context).player }
 
     val sortedTracks = remember(tracks, sortMode) {
         when (sortMode) {
@@ -328,6 +336,10 @@ fun TracksPage(
                 }
             }
         )
+    }
+
+    if (trackForDetails != null) {
+        TrackDetailsDialog(track = trackForDetails!!, onDismiss = { trackForDetails = null })
     }
 
     Surface(
@@ -401,11 +413,43 @@ fun TracksPage(
                                 onDismissRequest = { trackActionTarget = null }
                             ) {
                                 DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.library_menu_play_next)) },
+                                    leadingIcon = { Icon(Icons.Default.SkipNext, contentDescription = null) },
+                                    onClick = {
+                                        trackActionTarget = null
+                                        player.playNext(track)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.library_menu_add_queue)) },
+                                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null) },
+                                    onClick = {
+                                        trackActionTarget = null
+                                        player.addToQueue(track)
+                                    }
+                                )
+                                DropdownMenuItem(
                                     text = { Text(stringResource(R.string.library_menu_add_playlist)) },
                                     leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null) },
                                     onClick = {
                                         trackActionTarget = null
                                         onAddToPlaylist(track)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.track_menu_share)) },
+                                    leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+                                    onClick = {
+                                        trackActionTarget = null
+                                        shareTrack(context, track)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.track_details_title)) },
+                                    leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
+                                    onClick = {
+                                        trackActionTarget = null
+                                        trackForDetails = track
                                     }
                                 )
                                 DropdownMenuItem(
@@ -450,8 +494,10 @@ fun FavoritesPage(
     val liked by libVm.getLiked().observeAsState(emptyList())
     var trackActionTarget by remember { mutableStateOf<Track?>(null) }
     var trackToDelete by remember { mutableStateOf<Track?>(null) }
+    var trackForDetails by remember { mutableStateOf<Track?>(null) }
     val context = LocalContext.current
     val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
+    val player = remember { Screens.container(context).player }
 
     if (trackToDelete != null) {
         AlertDialog(
@@ -475,6 +521,10 @@ fun FavoritesPage(
                 }
             }
         )
+    }
+
+    if (trackForDetails != null) {
+        TrackDetailsDialog(track = trackForDetails!!, onDismiss = { trackForDetails = null })
     }
 
     Surface(
@@ -547,11 +597,43 @@ fun FavoritesPage(
                                     onDismissRequest = { trackActionTarget = null }
                                 ) {
                                     DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.library_menu_play_next)) },
+                                        leadingIcon = { Icon(Icons.Default.SkipNext, contentDescription = null) },
+                                        onClick = {
+                                            trackActionTarget = null
+                                            player.playNext(track)
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.library_menu_add_queue)) },
+                                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null) },
+                                        onClick = {
+                                            trackActionTarget = null
+                                            player.addToQueue(track)
+                                        }
+                                    )
+                                    DropdownMenuItem(
                                         text = { Text(stringResource(R.string.library_menu_add_playlist)) },
                                         leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null) },
                                         onClick = {
                                             trackActionTarget = null
                                             onAddToPlaylist(track)
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.track_menu_share)) },
+                                        leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+                                        onClick = {
+                                            trackActionTarget = null
+                                            shareTrack(context, track)
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.track_details_title)) },
+                                        leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
+                                        onClick = {
+                                            trackActionTarget = null
+                                            trackForDetails = track
                                         }
                                     )
                                     DropdownMenuItem(

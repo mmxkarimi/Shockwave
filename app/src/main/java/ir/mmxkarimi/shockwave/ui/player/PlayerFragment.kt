@@ -1,6 +1,7 @@
 package ir.mmxkarimi.shockwave.ui.player
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -19,8 +20,8 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
@@ -40,9 +41,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -53,12 +55,24 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -123,6 +137,8 @@ import ir.mmxkarimi.shockwave.domain.model.Lyrics
 import ir.mmxkarimi.shockwave.domain.model.PlaybackState
 import ir.mmxkarimi.shockwave.domain.model.RepeatMode
 import ir.mmxkarimi.shockwave.domain.model.Track
+import ir.mmxkarimi.shockwave.ui.components.TrackDetailsDialog
+import ir.mmxkarimi.shockwave.ui.components.shareTrack
 import ir.mmxkarimi.shockwave.ui.nav.PlayerNavigator
 import ir.mmxkarimi.shockwave.ui.nav.Screens
 import ir.mmxkarimi.shockwave.ui.player.lyrics.LyricsScrollPolicy
@@ -257,6 +273,9 @@ fun FullPlayerScreen(
     var scrubbing by remember { mutableStateOf(false) }
     var scrubPos by remember { mutableLongStateOf(0L) }
     val shownPos = if (scrubbing) scrubPos else s.positionMs()
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    var showDetailsDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     // ---- swipe down to close + enter animation ----
     var dragY by remember { mutableFloatStateOf(0f) }
@@ -301,34 +320,40 @@ fun FullPlayerScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // player_content
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    alpha = enter.value
-                    translationY = (1f - enter.value) * 72.dp.toPx()
-                }
-                .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Bottom))
-                .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
-        ) {
-            // player_handle
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(top = 8.dp)
-                    .size(width = 36.dp, height = 4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(colors.text.copy(alpha = 0.32f))
-            )
+        if (showDetailsDialog && currentTrack != null) {
+            TrackDetailsDialog(track = currentTrack, onDismiss = { showDetailsDialog = false })
+        }
 
-            // ---- player_top: lyrics toggle · pill group · heart ----
+        if (showDeleteDialog && currentTrack != null) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text(stringResource(R.string.library_delete_track_title)) },
+                text = { Text(stringResource(R.string.library_delete_track_message)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDeleteDialog = false
+                        Screens.container(ctx).libraryAdmin().deleteTrack(currentTrack.id())
+                        vm.next()
+                    }) {
+                        Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
+                }
+            )
+        }
+
+        // player_content
+        val playerTopRow: @Composable () -> Unit = {
             val likeScale = remember { Animatable(1f) }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 4.dp)
-                    .height(64.dp),
+                    .height(if (isLandscape) 52.dp else 64.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 PlayerIconButton(
@@ -348,7 +373,7 @@ fun FullPlayerScreen(
 
                 Row(
                     modifier = Modifier
-                        .height(56.dp)
+                        .height(if (isLandscape) 48.dp else 56.dp)
                         .clip(RoundedCornerShape(28.dp))
                         .background(colors.text.copy(alpha = 0.10f))
                         .padding(4.dp),
@@ -418,13 +443,13 @@ fun FullPlayerScreen(
                     )
                 }
             }
+        }
 
-            // ---- player_stage: cover OR lyrics ----
+        val playerStage: @Composable () -> Unit = {
             var stageSwipeOffset by remember { mutableFloatStateOf(0f) }
             BoxWithConstraints(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .pointerInput(Unit) {
                         detectHorizontalDragGestures(
                             onDragStart = { stageSwipeOffset = 0f },
@@ -481,12 +506,13 @@ fun FullPlayerScreen(
                     )
                 }
             }
+        }
 
-            // ---- Title row ----
+        val playerTitleRow: @Composable () -> Unit = {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = if (isLandscape) 8.dp else 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -496,7 +522,7 @@ fun FullPlayerScreen(
                             .fillMaxWidth()
                             .basicMarquee(iterations = 1),
                         style = TextStyle(
-                            fontSize = 30.sp,
+                            fontSize = if (isLandscape) 22.sp else 30.sp,
                             fontWeight = FontWeight.Bold,
                             textDirection = TextDirection.Content
                         ),
@@ -508,7 +534,7 @@ fun FullPlayerScreen(
                     Text(
                         text = currentTrack?.artistName() ?: "",
                         modifier = Modifier.fillMaxWidth(),
-                        style = TextStyle(fontSize = 17.sp, textDirection = TextDirection.Content),
+                        style = TextStyle(fontSize = if (isLandscape) 14.sp else 17.sp, textDirection = TextDirection.Content),
                         color = colors.textSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -526,6 +552,38 @@ fun FullPlayerScreen(
                         )
                     }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        if (currentTrack != null) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.library_menu_play_next)) },
+                                leadingIcon = { Icon(Icons.Default.SkipNext, contentDescription = null) },
+                                onClick = { menuOpen = false; vm.playNext(currentTrack) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.library_menu_add_queue)) },
+                                leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null) },
+                                onClick = { menuOpen = false; vm.addToQueue(currentTrack) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.library_menu_add_playlist)) },
+                                leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null) },
+                                onClick = { menuOpen = false; onAddToPlaylist(currentTrack) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.track_menu_share)) },
+                                leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+                                onClick = { menuOpen = false; shareTrack(ctx, currentTrack) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.track_details_title)) },
+                                leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
+                                onClick = { menuOpen = false; showDetailsDialog = true }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.library_menu_delete_track), color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = { menuOpen = false; showDeleteDialog = true }
+                            )
+                        }
                         DropdownMenuItem(
                             text = {
                                 Text(stringResource(if (showLyrics) R.string.player_show_cover else R.string.player_show_lyrics))
@@ -541,17 +599,12 @@ fun FullPlayerScreen(
                             text = { Text(stringResource(R.string.player_sleep_timer)) },
                             onClick = { menuOpen = false; onOpenQueue() }
                         )
-                        if (currentTrack != null) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.player_add_to_playlist)) },
-                                onClick = { menuOpen = false; onAddToPlaylist(currentTrack) }
-                            )
-                        }
                     }
                 }
             }
+        }
 
-            // ---- seek + times + transport are always LTR (tape direction) ----
+        val playerControls: @Composable () -> Unit = {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     WavySeekBar(
@@ -569,9 +622,9 @@ fun FullPlayerScreen(
                             vm.seekTo(it)
                         },
                         modifier = Modifier
-                            .padding(top = 12.dp)
+                            .padding(top = if (isLandscape) 4.dp else 12.dp)
                             .fillMaxWidth()
-                            .height(56.dp)
+                            .height(if (isLandscape) 44.dp else 56.dp)
                     )
 
                     Row(
@@ -597,9 +650,9 @@ fun FullPlayerScreen(
                     val nextEnabled = s.hasNext() || s.repeatMode() == RepeatMode.ALL
                     Row(
                         modifier = Modifier
-                            .padding(top = 8.dp)
+                            .padding(top = if (isLandscape) 4.dp else 8.dp)
                             .fillMaxWidth()
-                            .height(104.dp),
+                            .height(if (isLandscape) 76.dp else 104.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -636,7 +689,7 @@ fun FullPlayerScreen(
                             },
                             modifier = Modifier
                                 .padding(horizontal = 12.dp)
-                                .size(104.dp)
+                                .size(if (isLandscape) 76.dp else 104.dp)
                         )
 
                         SideButton(
@@ -652,6 +705,68 @@ fun FullPlayerScreen(
                         }
                     }
                 }
+            }
+        }
+
+        if (isLandscape) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        alpha = enter.value
+                    }
+                    .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Bottom))
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    playerStage()
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    playerTopRow()
+                    playerTitleRow()
+                    playerControls()
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        alpha = enter.value
+                        translationY = (1f - enter.value) * 72.dp.toPx()
+                    }
+                    .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Bottom))
+                    .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 8.dp)
+                        .size(width = 36.dp, height = 4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(colors.text.copy(alpha = 0.32f))
+                )
+
+                playerTopRow()
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    playerStage()
+                }
+                playerTitleRow()
+                playerControls()
             }
         }
     }

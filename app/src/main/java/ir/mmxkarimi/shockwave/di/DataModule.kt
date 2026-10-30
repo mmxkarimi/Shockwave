@@ -32,7 +32,7 @@ class DataModule private constructor(context: Context, io: Executor, settings: S
         this.settings = settings
         scanner = MediaStoreScanner(context, dbHelper, settings)
         val notifier = ChangeNotifier()
-        library = SqliteLibraryRepository(dbHelper, io, notifier, scanner)
+        library = SqliteLibraryRepository(context.applicationContext, dbHelper, io, notifier, scanner)
         homeFeed = LocalHomeFeedSource(dbHelper, io, notifier)
         waveformStore = SqliteWaveformStore(dbHelper)
     }

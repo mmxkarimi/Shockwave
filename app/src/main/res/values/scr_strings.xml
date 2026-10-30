@@ -88,7 +88,7 @@
     <string name="settings_scan_failed">Scan failed</string>
     <string name="settings_lyrics">Lyrics</string>
     <string name="settings_lyrics_online">Find lyrics online</string>
-    <string name="settings_lyrics_online_sub">Look up synced lyrics when no .lrc file is found</string>
+    <string name="settings_lyrics_online_sub">Look up synced lyrics from LRCLIB when no .lrc file is found</string>
     <string name="settings_playback">Playback</string>
     <string name="settings_sleep_default">Default sleep timer</string>
     <string name="settings_battery_saver">Battery saver</string>
@@ -130,4 +130,28 @@
     <string name="settings_sleep_active_min">Active: %1$d min remaining</string>
     <string name="settings_sleep_active_end">Active: Stops at end of track</string>
     <string name="settings_rescan_start">Start</string>
+    <string name="action_share">Share</string>
+    <string name="action_close">Close</string>
+    <string name="track_menu_share">Share</string>
+    <string name="track_details_title">Track Details</string>
+    <string name="track_details_title_label">Title</string>
+    <string name="track_details_artist">Artist</string>
+    <string name="track_details_album">Album</string>
+    <string name="track_details_genre">Genre</string>
+    <string name="track_details_duration">Duration</string>
+    <string name="track_details_year">Year</string>
+    <string name="track_details_track_number">Track Number</string>
+    <string name="track_details_format">MIME Type</string>
+    <string name="track_details_bitrate">Bitrate</string>
+    <string name="track_details_sampling_rate">Sampling Rate</string>
+    <string name="track_details_file_size">File Size</string>
+    <string name="track_details_file_path">File Path</string>
+    <string name="track_details_unknown">Unknown</string>
+    <string name="settings_source_code">Source Code</string>
+    <string name="settings_source_code_sub">Shockwave on GitHub</string>
+    <string name="settings_original_project">Original Project (Mowj)</string>
+    <string name="settings_original_project_sub">mhrsdev/music-player-mowj on GitHub</string>
+    <string name="settings_license">Open Source Notice</string>
+    <string name="settings_license_sub">Mowj MIT License</string>
+    <string name="settings_license_title">Mowj MIT License</string>
 </resources>

@@ -12,6 +12,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.media3.session.SessionResult
 
 /**
  * Hosts the MediaSession on the process-wide [PlayerHolder] player: media notification, lock screen,
@@ -40,6 +41,7 @@ class PlaybackService : MediaSessionService() {
                     stopForeground(false)
                 }
             }
+            triggerNotificationUpdate()
             scheduleProgressTick()
         }
     }
@@ -129,6 +131,45 @@ class PlaybackService : MediaSessionService() {
                             }
                         }
                         return super.onMediaButtonEvent(session, controllerInfo, intent)
+                    }
+
+                    override fun onConnect(
+                        session: MediaSession,
+                        controllerInfo: MediaSession.ControllerInfo,
+                    ): MediaSession.ConnectionResult {
+                        val connectionResult = super.onConnect(session, controllerInfo)
+                        val availablePlayerCommands = connectionResult.availablePlayerCommands.buildUpon()
+                            .add(Player.COMMAND_PLAY_PAUSE)
+                            .add(Player.COMMAND_PREPARE)
+                            .add(Player.COMMAND_SEEK_TO_NEXT)
+                            .add(Player.COMMAND_SEEK_TO_PREVIOUS)
+                            .build()
+                        return MediaSession.ConnectionResult.accept(
+                            connectionResult.availableSessionCommands,
+                            availablePlayerCommands
+                        )
+                    }
+
+                    override fun onPlayerCommandRequest(
+                        session: MediaSession,
+                        controllerInfo: MediaSession.ControllerInfo,
+                        playerCommand: Int,
+                    ): Int {
+                        if (playerCommand == Player.COMMAND_PLAY_PAUSE) {
+                            if (player.playbackState == Player.STATE_IDLE && player.mediaItemCount > 0) {
+                                player.prepare()
+                            }
+                            if (player.playbackState == Player.STATE_ENDED) {
+                                player.seekToDefaultPosition()
+                            }
+                            if (player.isPlaying) {
+                                player.pause()
+                            } else {
+                                player.play()
+                            }
+                            return SessionResult.RESULT_SUCCESS
+                        }
+                        return super.onPlayerCommandRequest(session, controllerInfo, playerCommand)
                     }
                 })
         val launch = getPackageManager().getLaunchIntentForPackage(getPackageName())

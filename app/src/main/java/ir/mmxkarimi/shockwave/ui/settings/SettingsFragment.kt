@@ -3,6 +3,7 @@ package ir.mmxkarimi.shockwave.ui.settings
 import android.content.Context
 import android.content.Intent
 import android.media.audiofx.AudioEffect
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -39,12 +40,12 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Contrast
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lyrics
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,6 +53,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -255,7 +257,6 @@ fun SettingsScreen(
                     ExpressiveGroupItemRow(
                         title = stringResource(R.string.settings_equalizer),
                         subtitle = stringResource(R.string.settings_equalizer_sub),
-                        icon = Icons.Default.GraphicEq,
                         onClick = {
                             try {
                                 val eqIntent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
@@ -409,11 +410,88 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                var showLicenseDialog by remember { mutableStateOf(false) }
+
+                if (showLicenseDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showLicenseDialog = false },
+                        title = { Text(stringResource(R.string.settings_license_title)) },
+                        text = {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .verticalScroll(rememberScrollState())
+                            ) {
+                                Text(
+                                    text = """
+MIT License
+
+Copyright (c) 2024 Mohammad Hossein Roholahi (mhrsdev)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+                                    """.trimIndent(),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { showLicenseDialog = false }) {
+                                Text(stringResource(R.string.action_close))
+                            }
+                        }
+                    )
+                }
+
                 // Grouped Island 4: About
                 ExpressiveGroupCard(title = stringResource(R.string.settings_about)) {
                     ExpressiveGroupItemRow(
                         title = stringResource(R.string.app_name),
-                        subtitle = stringResource(R.string.settings_version, "0.7.0")
+                        subtitle = stringResource(R.string.settings_version, "1.0.1")
+                    )
+                    ExpressiveGroupItemRow(
+                        title = stringResource(R.string.settings_source_code),
+                        subtitle = stringResource(R.string.settings_source_code_sub),
+                        onClick = {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/mmxkarimi/Shockwave")).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
+                        }
+                    )
+                    ExpressiveGroupItemRow(
+                        title = stringResource(R.string.settings_original_project),
+                        subtitle = stringResource(R.string.settings_original_project_sub),
+                        onClick = {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/mhrsdev/music-player-mowj")).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
+                        }
+                    )
+                    ExpressiveGroupItemRow(
+                        title = stringResource(R.string.settings_license),
+                        subtitle = stringResource(R.string.settings_license_sub),
+                        onClick = { showLicenseDialog = true }
                     )
                 }
             }

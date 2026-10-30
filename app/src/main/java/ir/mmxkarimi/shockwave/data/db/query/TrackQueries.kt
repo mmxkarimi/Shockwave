@@ -53,6 +53,8 @@ class TrackQueries(private val db: SQLiteDatabase) {
                 PlaylistTracksContract.COL_POSITION, playlistId
     )
 
+    fun getById(trackId: String): Track? = run(" WHERE t." + TracksContract.COL_ID + " = ?", trackId).firstOrNull()
+
     /** @param pattern from [LikePattern.contains] */
     fun search(pattern: String, limit: Int): List<Track> = run(
         " WHERE t." + TracksContract.COL_TITLE + LikePattern.CLAUSE + " OR t." + TracksContract.COL_ARTIST_NAME +

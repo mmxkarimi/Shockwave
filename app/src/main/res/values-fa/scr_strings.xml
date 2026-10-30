@@ -88,7 +88,7 @@
     <string name="settings_scan_failed">پویش ناموفق بود</string>
     <string name="settings_lyrics">متن ترانه</string>
     <string name="settings_lyrics_online">یافتن متن به‌صورت آنلاین</string>
-    <string name="settings_lyrics_online_sub">وقتی فایل ‎.lrc پیدا نشد، متن همگام را جستجو کن</string>
+    <string name="settings_lyrics_online_sub">وقتی فایل ‎.lrc پیدا نشد، متن همگام را از LRCLIB جستجو کن</string>
     <string name="settings_playback">پخش</string>
     <string name="settings_sleep_default">زمان‌سنج خواب پیش‌فرض</string>
     <string name="settings_battery_saver">صرفه‌جویی باتری</string>
@@ -130,4 +130,28 @@
     <string name="settings_sleep_active_min">فعال: %1$d دقیقه باقی‌مانده</string>
     <string name="settings_sleep_active_end">فعال: توقف در پایان آهنگ</string>
     <string name="settings_rescan_start">شروع</string>
+    <string name="action_share">اشتراک‌گذاری</string>
+    <string name="action_close">بستن</string>
+    <string name="track_menu_share">اشتراک‌گذاری</string>
+    <string name="track_details_title">جزئیات آهنگ</string>
+    <string name="track_details_title_label">عنوان</string>
+    <string name="track_details_artist">خواننده</string>
+    <string name="track_details_album">آلبوم</string>
+    <string name="track_details_genre">سبک</string>
+    <string name="track_details_duration">مدت زمان</string>
+    <string name="track_details_year">سال انتشار</string>
+    <string name="track_details_track_number">شماره آهنگ</string>
+    <string name="track_details_format">نوع فایل</string>
+    <string name="track_details_bitrate">نرخ بیت</string>
+    <string name="track_details_sampling_rate">نرخ نمونه‌برداری</string>
+    <string name="track_details_file_size">اندازه فایل</string>
+    <string name="track_details_file_path">مسیر فایل</string>
+    <string name="track_details_unknown">نامشخص</string>
+    <string name="settings_source_code">کد منبع</string>
+    <string name="settings_source_code_sub">شاک‌ویو در گیت‌هاب</string>
+    <string name="settings_original_project">پروژه اصلی (موج)</string>
+    <string name="settings_original_project_sub">mhrsdev/music-player-mowj در گیت‌هاب</string>
+    <string name="settings_license">یادداشت‌های متن‌باز</string>
+    <string name="settings_license_sub">مجوز MIT نرم‌افزار موج</string>
+    <string name="settings_license_title">مجوز نرم‌افزار موج (MIT)</string>
 </resources>
