@@ -80,14 +80,14 @@ private const val ARG_ID = "id"
 fun TrackListScreen(
     vm: TrackListViewModel,
     kind: ScreenNavigator.TrackList,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onAddToPlaylist: (Track) -> Unit
 ) {
     val tracks by vm.getTracks().observeAsState(emptyList())
     val header by vm.getHeader().observeAsState()
     var trackActionTarget by remember { mutableStateOf<Track?>(null) }
     var trackToDelete by remember { mutableStateOf<Track?>(null) }
     var trackForDetails by remember { mutableStateOf<Track?>(null) }
-    var trackToAddToPlaylist by remember { mutableStateOf<Track?>(null) }
     val context = LocalContext.current
     val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
     val player = remember { Screens.container(context).player }
@@ -125,13 +125,6 @@ fun TrackListScreen(
 
     if (trackForDetails != null) {
         TrackDetailsDialog(track = trackForDetails!!, onDismiss = { trackForDetails = null })
-    }
-
-    if (trackToAddToPlaylist != null) {
-        AddToPlaylistSheet(
-            track = trackToAddToPlaylist!!,
-            onDismiss = { trackToAddToPlaylist = null }
-        )
     }
 
     Scaffold(
@@ -270,7 +263,7 @@ fun TrackListScreen(
                                 leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null) },
                                 onClick = {
                                     trackActionTarget = null
-                                    trackToAddToPlaylist = track
+                                    onAddToPlaylist(track)
                                 }
                             )
                             DropdownMenuItem(
@@ -328,7 +321,10 @@ class TrackListFragment : Fragment() {
                     TrackListScreen(
                         vm = vm,
                         kind = kind,
-                        onBack = { parentFragmentManager.popBackStack() }
+                        onBack = { parentFragmentManager.popBackStack() },
+                        onAddToPlaylist = { track ->
+                            AddToPlaylistSheet.show(parentFragmentManager, track)
+                        }
                     )
                 }
             }
