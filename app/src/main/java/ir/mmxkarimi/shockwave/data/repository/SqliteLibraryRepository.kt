@@ -138,6 +138,10 @@ class SqliteLibraryRepository(
         write(ChangeNotifier.PLAYLISTS) { PlaylistQueries(it).delete(playlistId) }
     }
 
+    override fun deleteTrack(trackId: String) {
+        write(ChangeNotifier.TRACKS) { TrackQueries(it).deleteByIds(listOf(trackId)) }
+    }
+
     override fun removeFromPlaylist(playlistId: String, trackId: String) {
         write(ChangeNotifier.PLAYLISTS) { PlaylistQueries(it).removeTrack(playlistId, trackId) }
     }

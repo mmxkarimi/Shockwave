@@ -222,6 +222,11 @@ class FakeLibraryRepository : LibraryRepository, LibraryAdmin {
         changed()
     }
 
+    override fun deleteTrack(trackId: String) {
+        tracks.remove(trackId)
+        changed()
+    }
+
     override fun removeFromPlaylist(playlistId: String, trackId: String) {
         val ids = playlistTrackIds[playlistId]
         if (ids != null && ids.remove(trackId)) changed()

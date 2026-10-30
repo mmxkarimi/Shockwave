@@ -15,24 +15,24 @@ data class AccentScheme(
     val glow: Int
 ) {
     companion object {
-        /** Lapis default used when there is no artwork or "Colors from artwork" is off. */
+        /** Lime default used when there is no artwork or "Colors from artwork" is off. */
         @JvmStatic
         fun base(dark: Boolean): AccentScheme {
             return if (dark) {
                 AccentScheme(
-                    primary = 0xFFA6C8FF.toInt(),
-                    onPrimary = 0xFF00315F.toInt(),
-                    container = 0xFF1E4878.toInt(),
-                    onContainer = 0xFFD4E3FF.toInt(),
-                    glow = 0xFF1E4878.toInt()
+                    primary = 0xFFC6F135.toInt(),
+                    onPrimary = 0xFF283500.toInt(),
+                    container = 0xFF3C4D00.toInt(),
+                    onContainer = 0xFFE2FFA3.toInt(),
+                    glow = 0xFF3C4D00.toInt()
                 )
             } else {
                 AccentScheme(
-                    primary = 0xFF2F5F95.toInt(),
+                    primary = 0xFF516600.toInt(),
                     onPrimary = 0xFFFFFFFF.toInt(),
-                    container = 0xFFD4E3FF.toInt(),
-                    onContainer = 0xFF001C3A.toInt(),
-                    glow = 0xFFD4E3FF.toInt()
+                    container = 0xFFDDF870.toInt(),
+                    onContainer = 0xFF161E00.toInt(),
+                    glow = 0xFFDDF870.toInt()
                 )
             }
         }

@@ -12,6 +12,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.LinearInterpolator
+import ir.mmxkarimi.shockwave.ui.theme.MotionPolicy
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
@@ -116,10 +117,14 @@ class MorphPlayPauseView @JvmOverloads constructor(
     }
 
     private fun startSpinning() {
+        if (MotionPolicy.batterySaver(context)) {
+            spinAngle = 0f
+            return
+        }
         if (spinAnimator?.isRunning == true) return
         spinAnimator?.cancel()
         spinAnimator = ValueAnimator.ofFloat(spinAngle, spinAngle + 360f).apply {
-            duration = 4500
+            duration = 9000L
             repeatCount = ValueAnimator.INFINITE
             repeatMode = ValueAnimator.RESTART
             interpolator = LinearInterpolator()

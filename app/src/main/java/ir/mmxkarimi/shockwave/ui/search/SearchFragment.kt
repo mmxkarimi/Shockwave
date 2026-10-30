@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +44,7 @@ import ir.mmxkarimi.shockwave.ui.settings.ThemeApplier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -118,33 +120,19 @@ fun SearchScreen(
                         }
                     },
                     singleLine = true,
-                    shape = RoundedCornerShape(24.dp)
+                    shape = RoundedCornerShape(24.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        disabledBorderColor = Color.Transparent,
+                        errorBorderColor = Color.Transparent,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+                    )
                 )
             }
 
-        // Filter chips (All, Tracks, Albums, Artists, Playlists)
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            val filters = listOf(
-                SearchFilter.ALL to R.string.search_filter_all,
-                SearchFilter.SONGS to R.string.search_filter_songs,
-                SearchFilter.ALBUMS to R.string.search_filter_albums,
-                SearchFilter.ARTISTS to R.string.search_filter_artists,
-                SearchFilter.PLAYLISTS to R.string.search_filter_playlists
-            )
-            items(filters) { (f, labelRes) ->
-                FilterChip(
-                    selected = filter == f,
-                    onClick = { vm.setFilter(f) },
-                    label = { Text(text = stringResource(labelRes)) }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Body area
         when (mode) {

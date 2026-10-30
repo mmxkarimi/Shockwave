@@ -2,8 +2,10 @@ package ir.mmxkarimi.shockwave.playback
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.view.KeyEvent
 import androidx.annotation.OptIn
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -29,9 +31,49 @@ class PlaybackService : MediaSessionService() {
     private val serviceWatcher: Player.Listener = object : Player.Listener {
         override fun onEvents(p: Player, events: Player.Events) {
             handler.removeCallbacks(idleStopTask)
-            if (!isActive()) handler.postDelayed(idleStopTask, IDLE_STOP_DELAY_MS)
+            if (!isActive()) {
+                handler.postDelayed(idleStopTask, IDLE_STOP_DELAY_MS)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(STOP_FOREGROUND_DETACH)
+                } else {
+                    @Suppress("DEPRECATION")
+                    stopForeground(false)
+                }
+            }
             scheduleProgressTick()
         }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent != null && Intent.ACTION_MEDIA_BUTTON == intent.action) {
+            val keyEvent: KeyEvent? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT)
+            }
+            if (keyEvent != null && keyEvent.action == KeyEvent.ACTION_DOWN) {
+                if (player.getPlaybackState() == Player.STATE_IDLE && player.getMediaItemCount() > 0) {
+                    player.prepare()
+                }
+                when (keyEvent.keyCode) {
+                    KeyEvent.KEYCODE_MEDIA_PLAY -> player.play()
+                    KeyEvent.KEYCODE_MEDIA_PAUSE -> player.pause()
+                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+                    KeyEvent.KEYCODE_HEADSETHOOK -> {
+                        if (player.isPlaying()) player.pause() else player.play()
+                    }
+                    KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                        if (player.hasNextMediaItem()) player.seekToNextMediaItem()
+                    }
+                    KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                        if (player.hasPreviousMediaItem()) player.seekToPreviousMediaItem()
+                    }
+                    KeyEvent.KEYCODE_MEDIA_STOP -> player.stop()
+                }
+            }
+        }
+        return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onCreate() {
@@ -48,12 +90,45 @@ class PlaybackService : MediaSessionService() {
                         controllerInfo: MediaSession.ControllerInfo,
                         intent: Intent,
                     ): Boolean {
-                        if (player.getPlaybackState() == Player.STATE_IDLE && player.getMediaItemCount() > 0) {
-                            player.prepare()
+                        val keyEvent: KeyEvent? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT)
                         }
-                        // MediaSession.Callback is an interface, so plain "super" points to Object. Return false to let
-                        // Media3 handle the button as usual (this is what the interface default does).
-                        return false
+                        if (keyEvent != null && keyEvent.action == KeyEvent.ACTION_DOWN) {
+                            if (player.getPlaybackState() == Player.STATE_IDLE && player.getMediaItemCount() > 0) {
+                                player.prepare()
+                            }
+                            when (keyEvent.keyCode) {
+                                KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                                    player.play()
+                                    return true
+                                }
+                                KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                                    player.pause()
+                                    return true
+                                }
+                                KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+                                KeyEvent.KEYCODE_HEADSETHOOK -> {
+                                    if (player.isPlaying()) player.pause() else player.play()
+                                    return true
+                                }
+                                KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                                    if (player.hasNextMediaItem()) player.seekToNextMediaItem()
+                                    return true
+                                }
+                                KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                                    if (player.hasPreviousMediaItem()) player.seekToPreviousMediaItem()
+                                    return true
+                                }
+                                KeyEvent.KEYCODE_MEDIA_STOP -> {
+                                    player.stop()
+                                    return true
+                                }
+                            }
+                        }
+                        return super.onMediaButtonEvent(session, controllerInfo, intent)
                     }
                 })
         val launch = getPackageManager().getLaunchIntentForPackage(getPackageName())

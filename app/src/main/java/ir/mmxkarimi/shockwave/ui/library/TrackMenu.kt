@@ -19,6 +19,7 @@ object TrackMenu {
     private const val ADD_QUEUE = 2
     private const val LIKE = 3
     private const val ADD_PLAYLIST = 4
+    private const val DELETE = 5
 
     @JvmStatic
     fun show(anchor: View, track: Track) {
@@ -34,17 +35,30 @@ object TrackMenu {
             if (track.liked) R.string.library_menu_unlike else R.string.library_menu_like
         )
         menu.menu.add(0, ADD_PLAYLIST, 3, R.string.library_menu_add_playlist)
+        menu.menu.add(0, DELETE, 4, R.string.library_menu_delete_track)
         menu.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 PLAY_NEXT -> player.playNext(track)
                 ADD_QUEUE -> player.addToQueue(track)
                 LIKE -> library.toggleLike(track.id)
                 ADD_PLAYLIST -> pickPlaylist(anchor.context, library, track)
+                DELETE -> confirmDeleteTrack(anchor.context, track)
                 else -> return@setOnMenuItemClickListener false
             }
             true
         }
         menu.show()
+    }
+
+    private fun confirmDeleteTrack(context: Context, track: Track) {
+        AlertDialog.Builder(context)
+            .setTitle(R.string.library_delete_track_title)
+            .setMessage(R.string.library_delete_track_message)
+            .setPositiveButton(R.string.action_delete) { _, _ ->
+                Screens.container(context).libraryAdmin().deleteTrack(track.id)
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
     }
 
     /** Lists the playlists (last row: a new one) and adds [track] to the chosen one. */

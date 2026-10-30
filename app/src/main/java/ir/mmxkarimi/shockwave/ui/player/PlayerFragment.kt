@@ -202,16 +202,23 @@ fun FullPlayerScreen(
 
     // ---- palette (colors from artwork) ----
     val artworkColors = remember { PrefsSettingsStore(ctx).isArtworkColors() }
+    val paletteCache = remember { mutableMapOf<String, PlayerPalette>() }
+    val artCache = remember { mutableMapOf<String, Bitmap>() }
     var palette by remember { mutableStateOf(PlayerPalette.forSeed(0)) }
     var tinyArt by remember { mutableStateOf<Bitmap?>(null) }
     val slide = remember { Animatable(1f) }
     var lastTrackId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(currentTrack?.id()) {
-        palette = if (artworkColors) PlayerPalette.forSeed(currentTrack?.placeholderSeed() ?: 0)
-        else PlayerPalette.fromColor(0xFF5F7FA6.toInt())
-        tinyArt = null
         val id = currentTrack?.id()
+        if (id != null && paletteCache.containsKey(id)) {
+            palette = paletteCache[id]!!
+            tinyArt = artCache[id]
+        } else {
+            palette = if (artworkColors) PlayerPalette.forSeed(currentTrack?.placeholderSeed() ?: 0)
+            else PlayerPalette.fromColor(0xFFC6F135.toInt())
+            tinyArt = null
+        }
         if (lastTrackId != null && id != null && id != lastTrackId && motion) {
             slide.snapTo(0f)
             slide.animateTo(1f, tween(320))
@@ -224,7 +231,13 @@ fun FullPlayerScreen(
         val tiny = PlayerBackdropView.prepare(cover) ?: return@onArtwork
         val px = IntArray(tiny.width * tiny.height)
         tiny.getPixels(px, 0, tiny.width, 0, 0, tiny.width, tiny.height)
-        palette = PlayerPalette.fromColor(ColorExtractor.extractSeed(px, px.size))
+        val extracted = PlayerPalette.fromColor(ColorExtractor.extractSeed(px, px.size))
+        val id = currentTrack?.id()
+        if (id != null) {
+            paletteCache[id] = extracted
+            artCache[id] = tiny
+        }
+        palette = extracted
         tinyArt = tiny
     }
 
@@ -407,49 +420,67 @@ fun FullPlayerScreen(
             }
 
             // ---- player_stage: cover OR lyrics ----
+            var stageSwipeOffset by remember { mutableFloatStateOf(0f) }
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        detectHorizontalDragGestures(
+                            onDragStart = { stageSwipeOffset = 0f },
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                stageSwipeOffset += dragAmount
+                            },
+                            onDragEnd = {
+                                val threshold = 100f
+                                if (stageSwipeOffset < -threshold) {
+                                    vm.next()
+                                } else if (stageSwipeOffset > threshold) {
+                                    vm.previous()
+                                }
+                            }
+                        )
+                    }
             ) {
                 val side = (min(maxWidth.value, maxHeight.value).dp - 16.dp).coerceAtLeast(0.dp)
                 val artworkUpdated by rememberUpdatedState(onArtwork)
 
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = !showLyrics,
-                    enter = fadeIn(tween(200)),
-                    exit = ExitTransition.None,
-                    modifier = Modifier.align(Alignment.Center)
-                ) {
-                    AndroidView(
-                        factory = { c ->
-                            ArtworkView(c).apply {
-                                setCornerRadiusDp(32)
-                                setListener { bmp -> artworkUpdated(bmp) }
-                            }
-                        },
-                        update = { v ->
-                            val t = currentTrack
-                            if (t != null && v.tag != t.id()) {
-                                v.tag = t.id()
-                                v.bind(t)
-                            }
-                        },
-                        modifier = Modifier
-                            .size(side)
-                            .graphicsLayer {
-                                alpha = 0.4f + 0.6f * slide.value
-                                translationX = (1f - slide.value) * 24.dp.toPx()
-                            }
-                            .shadow(18.dp, RoundedCornerShape(32.dp))
-                    )
-                }
+                AndroidView(
+                    factory = { c ->
+                        ArtworkView(c).apply {
+                            setCornerRadiusDp(32)
+                            setListener { bmp -> artworkUpdated(bmp) }
+                        }
+                    },
+                    update = { v ->
+                        val t = currentTrack
+                        if (t != null && v.tag != t.id()) {
+                            v.tag = t.id()
+                            v.bind(t)
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(side)
+                        .graphicsLayer {
+                            alpha = if (showLyrics) 0f else (0.4f + 0.6f * slide.value)
+                            translationX = (1f - slide.value) * 24.dp.toPx()
+                        }
+                        .shadow(if (showLyrics) 0.dp else 18.dp, RoundedCornerShape(32.dp))
+                )
 
                 if (showLyrics) {
                     LyricsStage(
                         lyrics = lyrics,
                         activeLine = activeLine,
                         colors = colors,
+                        motion = motion,
+                        onLineClick = { vm.seekToLine(it) },
+                        onRetry = { vm.retryLyrics() }
+                    )
+                }
+            }
                         motion = motion,
                         onLineClick = { vm.seekToLine(it) },
                         onRetry = { vm.retryLyrics() }

@@ -121,15 +121,6 @@ fun PermissionContent(
                 )
             )
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedButton(
-            onClick = onDone,
-            modifier = Modifier.fillMaxWidth(0.8f)
-        ) {
-            Text(text = stringResource(R.string.nav_perm_folders))
-        }
     }
 }
 }

@@ -103,14 +103,19 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
 
         backToHome = object : OnBackPressedCallback(false) {
             override fun handleOnBackPressed() {
-                openTab(Tab.HOME)
+                if (permissionFlow) {
+                    finish()
+                } else {
+                    openTab(Tab.HOME)
+                }
             }
         }
         onBackPressedDispatcher.addCallback(this, backToHome!!)
         supportFragmentManager.addOnBackStackChangedListener { updateBackToHome() }
+        shell.getTab().observe(this) { updateBackToHome() }
 
         if (savedInstanceState == null) {
-            if (AudioPermission.granted(this) || PermissionPrefs.skipped(this)) {
+            if (AudioPermission.granted(this)) {
                 if (!applyShortcut(intent)) showTab(Tab.HOME)
                 askNotificationsOnce()
             } else {
@@ -119,9 +124,11 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                     .replace(R.id.screen_container, PermissionFragment()).commit()
             }
         } else {
-            permissionFlow = savedInstanceState.getBoolean(STATE_PERMISSION)
+            permissionFlow = !AudioPermission.granted(this) && savedInstanceState.getBoolean(STATE_PERMISSION)
             val tabOrd = savedInstanceState.getInt(STATE_TAB, 0)
-            shell.selectTab(Tab.values()[tabOrd])
+            val restoredTab = Tab.values().getOrElse(tabOrd) { Tab.HOME }
+            shell.selectTab(restoredTab)
+            updateBackToHome()
         }
         updateChromeVisibility()
     }
@@ -134,6 +141,8 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                 val playback by shell.getPlayback().observeAsState()
                 val currentTab by shell.getTab().observeAsState(Tab.HOME)
                 val accent by ThemeController.get(this@MainActivity).accent().observeAsState()
+                val settings = remember { (application as ShockwaveApp).getContainer().settings() }
+                val artworkColors by settings.artworkColors().observeAsState(true)
                 val theme = remember { PrefsSettingsStore(this@MainActivity).getTheme() }
                 val currentMode = ThemeApplier.toMode(theme)
 
@@ -145,7 +154,8 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                     0f
                 }
 
-                ShockwaveTheme(mode = currentMode, accentScheme = accent) {
+                val effectiveAccent = if (artworkColors) accent else null
+                ShockwaveTheme(mode = currentMode, accentScheme = effectiveAccent) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -209,14 +219,12 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
         when (action) {
             ACTION_SHORTCUT_RECENT -> {
                 intent.action = null
-                openTab(Tab.LIBRARY)
-                openTrackList(TrackList.RECENT, null)
+                openHomeWithPage(0)
                 return true
             }
             ACTION_SHORTCUT_FAVORITES -> {
                 intent.action = null
-                openTab(Tab.LIBRARY)
-                openTrackList(TrackList.LIKED, null)
+                openHomeWithPage(1)
                 return true
             }
             ACTION_SHORTCUT_PLAY -> {
@@ -227,6 +235,21 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
             }
         }
         return false
+    }
+
+    private fun openHomeWithPage(page: Int) {
+        val fm = supportFragmentManager
+        if (fm.backStackEntryCount > 0) {
+            fm.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+        }
+        val f = HomeFragment.newInstance(page)
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
+            .replace(R.id.screen_container, f)
+            .commit()
+        shell.selectTab(Tab.HOME)
+        updateBackToHome()
     }
 
     private fun playFromShortcut() {
@@ -247,7 +270,7 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
     }
 
     private fun updateBackToHome() {
-        backToHome?.isEnabled = !permissionFlow && shell.getTab().value != Tab.HOME &&
+        backToHome?.isEnabled = (permissionFlow || shell.getTab().value != Tab.HOME) &&
                 supportFragmentManager.backStackEntryCount == 0
     }
 
@@ -338,11 +361,9 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
 
     override fun onPermissionFlowDone() {
         if (!permissionFlow) return
+        if (!AudioPermission.granted(this)) return
         permissionFlow = false
-        PermissionPrefs.markSkipped(this)
-        if (AudioPermission.granted(this)) {
-            (application as ShockwaveApp).getContainer().onAudioPermissionGranted()
-        }
+        (application as ShockwaveApp).getContainer().onAudioPermissionGranted()
         updateChromeVisibility()
         showTab(Tab.HOME)
         askNotificationsOnce()

@@ -20,6 +20,8 @@ interface LibraryAdmin {
 
     fun deletePlaylist(playlistId: String)
 
+    fun deleteTrack(trackId: String)
+
     fun removeFromPlaylist(playlistId: String, trackId: String)
 
     /** Moves the member at index [from] to index [to] (indices into the playlist's current order). */

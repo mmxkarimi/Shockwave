@@ -35,11 +35,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -75,6 +79,7 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import ir.mmxkarimi.shockwave.R
+import ir.mmxkarimi.shockwave.domain.model.Playlist
 import ir.mmxkarimi.shockwave.domain.model.Track
 import ir.mmxkarimi.shockwave.ui.components.ExpressiveSubheaderRow
 import ir.mmxkarimi.shockwave.ui.components.TrackRow
@@ -93,19 +98,20 @@ fun UnifiedHomeScreen(
     homeVm: HomeViewModel,
     libVm: LibraryViewModel,
     isScanning: Boolean,
+    initialPage: Int = 0,
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onNavigateTrackList: (ScreenNavigator.TrackList, String?) -> Unit,
     onAddToPlaylist: (Track) -> Unit
 ) {
-    val pagerState = rememberPagerState(initialPage = 0) { 5 }
+    val pagerState = rememberPagerState(initialPage = initialPage) { 5 }
     val coroutineScope = rememberCoroutineScope()
     val tabs = listOf(
-        "Tracks",
-        "Favorites",
-        "Playlists",
-        "Albums",
-        "Artists"
+        stringResource(R.string.home_tab_tracks),
+        stringResource(R.string.home_tab_favorites),
+        stringResource(R.string.home_tab_playlists),
+        stringResource(R.string.home_tab_albums),
+        stringResource(R.string.home_tab_artists)
     )
 
     val tracksListState = rememberLazyListState()
@@ -269,22 +275,59 @@ fun TracksPage(
     onAddToPlaylist: (Track) -> Unit
 ) {
     val tracks by libVm.getAllTracks().observeAsState(emptyList())
-    var sortMode by remember { mutableIntStateOf(0) } // 0: Title, 1: Artist, 2: Duration
+    var sortMode by remember { mutableIntStateOf(0) } // 0: Title, 1: Artist, 2: Duration, 3: Date added
+    var sortMenuOpen by remember { mutableStateOf(false) }
+    var trackActionTarget by remember { mutableStateOf<Track?>(null) }
+    var trackToDelete by remember { mutableStateOf<Track?>(null) }
+    val context = LocalContext.current
+    val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
 
     val sortedTracks = remember(tracks, sortMode) {
         when (sortMode) {
             0 -> tracks.sortedBy { it.title.lowercase() }
             1 -> tracks.sortedBy { it.artistName.lowercase() }
             2 -> tracks.sortedByDescending { it.durationMs }
+            3 -> tracks.sortedByDescending { it.addedAtMs }
             else -> tracks
         }
     }
 
+    val titleSortLabel = stringResource(R.string.sort_title)
+    val artistSortLabel = stringResource(R.string.sort_artist)
+    val durationSortLabel = stringResource(R.string.sort_duration)
+    val dateAddedSortLabel = stringResource(R.string.sort_date_added)
+    val allTracksLabel = stringResource(R.string.all_tracks)
+
     val sortLabel = when (sortMode) {
-        0 -> "Title"
-        1 -> "Artist"
-        2 -> "Duration"
-        else -> "Title"
+        0 -> titleSortLabel
+        1 -> artistSortLabel
+        2 -> durationSortLabel
+        3 -> dateAddedSortLabel
+        else -> titleSortLabel
+    }
+
+    if (trackToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { trackToDelete = null },
+            title = { Text(stringResource(R.string.library_delete_track_title)) },
+            text = { Text(stringResource(R.string.library_delete_track_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val t = trackToDelete
+                    trackToDelete = null
+                    if (t != null) {
+                        libraryAdmin.deleteTrack(t.id)
+                    }
+                }) {
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { trackToDelete = null }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
     }
 
     Surface(
@@ -299,33 +342,83 @@ fun TracksPage(
                 contentPadding = PaddingValues(top = 10.dp, bottom = 120.dp)
             ) {
                 item {
-                    ExpressiveSubheaderRow(
-                        itemCount = sortedTracks.size,
-                        sortLabel = sortLabel,
-                        onSortClick = {
-                            sortMode = (sortMode + 1) % 3
-                        },
-                        onShuffleClick = {
-                            libVm.shuffle(sortedTracks, "All Tracks")
-                        },
-                        onPlayAllClick = {
-                            if (sortedTracks.isNotEmpty()) {
-                                libVm.play(sortedTracks, 0, "All Tracks")
+                    Box {
+                        ExpressiveSubheaderRow(
+                            itemCount = sortedTracks.size,
+                            sortLabel = sortLabel,
+                            onSortClick = { sortMenuOpen = true },
+                            onShuffleClick = {
+                                libVm.shuffle(sortedTracks, allTracksLabel)
+                            },
+                            onPlayAllClick = {
+                                if (sortedTracks.isNotEmpty()) {
+                                    libVm.play(sortedTracks, 0, allTracksLabel)
+                                }
+                            }
+                        )
+
+                        DropdownMenu(
+                            expanded = sortMenuOpen,
+                            onDismissRequest = { sortMenuOpen = false }
+                        ) {
+                            val sortOptions = listOf(
+                                0 to titleSortLabel,
+                                1 to artistSortLabel,
+                                2 to durationSortLabel,
+                                3 to dateAddedSortLabel
+                            )
+                            sortOptions.forEach { (mode, label) ->
+                                DropdownMenuItem(
+                                    text = { Text(label) },
+                                    onClick = {
+                                        sortMode = mode
+                                        sortMenuOpen = false
+                                    },
+                                    leadingIcon = if (sortMode == mode) {
+                                        { Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                                    } else null
+                                )
                             }
                         }
-                    )
+                    }
                 }
 
                 items(sortedTracks, key = { it.id }) { track ->
-                    TrackRow(
-                        track = track,
-                        onClick = {
-                            libVm.play(sortedTracks, sortedTracks.indexOf(track), "All Tracks")
-                        },
-                        onMoreClick = {
-                            onAddToPlaylist(track)
+                    Box {
+                        TrackRow(
+                            track = track,
+                            onClick = {
+                                libVm.play(sortedTracks, sortedTracks.indexOf(track), "All Tracks")
+                            },
+                            onMoreClick = {
+                                trackActionTarget = track
+                            }
+                        )
+
+                        if (trackActionTarget == track) {
+                            DropdownMenu(
+                                expanded = true,
+                                onDismissRequest = { trackActionTarget = null }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.library_menu_add_playlist)) },
+                                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null) },
+                                    onClick = {
+                                        trackActionTarget = null
+                                        onAddToPlaylist(track)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.library_menu_delete_track), color = MaterialTheme.colorScheme.error) },
+                                    leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                    onClick = {
+                                        trackActionTarget = null
+                                        trackToDelete = track
+                                    }
+                                )
+                            }
                         }
-                    )
+                    }
                 }
             }
 
@@ -355,6 +448,34 @@ fun FavoritesPage(
     onAddToPlaylist: (Track) -> Unit
 ) {
     val liked by libVm.getLiked().observeAsState(emptyList())
+    var trackActionTarget by remember { mutableStateOf<Track?>(null) }
+    var trackToDelete by remember { mutableStateOf<Track?>(null) }
+    val context = LocalContext.current
+    val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
+
+    if (trackToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { trackToDelete = null },
+            title = { Text(stringResource(R.string.library_delete_track_title)) },
+            text = { Text(stringResource(R.string.library_delete_track_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val t = trackToDelete
+                    trackToDelete = null
+                    if (t != null) {
+                        libraryAdmin.deleteTrack(t.id)
+                    }
+                }) {
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { trackToDelete = null }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -397,8 +518,8 @@ fun FavoritesPage(
                     item {
                         ExpressiveSubheaderRow(
                             itemCount = liked.size,
-                            sortLabel = "Favorites",
-                            onSortClick = {},
+                            sortLabel = null,
+                            onSortClick = null,
                             onShuffleClick = {
                                 libVm.shuffle(liked, "Favorites")
                             },
@@ -409,15 +530,41 @@ fun FavoritesPage(
                     }
 
                     items(liked, key = { it.id }) { track ->
-                        TrackRow(
-                            track = track,
-                            onClick = {
-                                libVm.play(liked, liked.indexOf(track), "Favorites")
-                            },
-                            onMoreClick = {
-                                onAddToPlaylist(track)
+                        Box {
+                            TrackRow(
+                                track = track,
+                                onClick = {
+                                    libVm.play(liked, liked.indexOf(track), "Favorites")
+                                },
+                                onMoreClick = {
+                                    trackActionTarget = track
+                                }
+                            )
+
+                            if (trackActionTarget == track) {
+                                DropdownMenu(
+                                    expanded = true,
+                                    onDismissRequest = { trackActionTarget = null }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.library_menu_add_playlist)) },
+                                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null) },
+                                        onClick = {
+                                            trackActionTarget = null
+                                            onAddToPlaylist(track)
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.library_menu_delete_track), color = MaterialTheme.colorScheme.error) },
+                                        leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                        onClick = {
+                                            trackActionTarget = null
+                                            trackToDelete = track
+                                        }
+                                    )
+                                }
                             }
-                        )
+                        }
                     }
                 }
 
@@ -450,8 +597,34 @@ fun PlaylistsPage(
     val playlists by libVm.getPlaylists().observeAsState(emptyList())
     var showCreateDialog by remember { mutableStateOf(false) }
     var newPlaylistName by remember { mutableStateOf("") }
+    var playlistToDelete by remember { mutableStateOf<Playlist?>(null) }
     val context = LocalContext.current
     val library = remember { Screens.container(context).library }
+    val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
+
+    if (playlistToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { playlistToDelete = null },
+            title = { Text(stringResource(R.string.library_delete_playlist_title)) },
+            text = { Text(stringResource(R.string.library_delete_playlist_message, playlistToDelete?.name ?: "")) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val p = playlistToDelete
+                    playlistToDelete = null
+                    if (p != null) {
+                        libraryAdmin.deletePlaylist(p.id)
+                    }
+                }) {
+                    Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { playlistToDelete = null }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        )
+    }
 
     if (showCreateDialog) {
         AlertDialog(
@@ -461,7 +634,7 @@ fun PlaylistsPage(
                 OutlinedTextField(
                     value = newPlaylistName,
                     onValueChange = { newPlaylistName = it },
-                    label = { Text("Playlist Name") },
+                    label = { Text(stringResource(R.string.playlist_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -472,18 +645,18 @@ fun PlaylistsPage(
                         val name = newPlaylistName.trim()
                         if (name.isNotEmpty()) {
                             library.createPlaylist(name, null)
-                            Toast.makeText(context, "Playlist created: $name", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.playlist_created_toast, name), Toast.LENGTH_SHORT).show()
                             newPlaylistName = ""
                             showCreateDialog = false
                         }
                     }
                 ) {
-                    Text("Create")
+                    Text(stringResource(R.string.playlist_create_button))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCreateDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -532,7 +705,7 @@ fun PlaylistsPage(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    text = "New Playlist",
+                                    text = stringResource(R.string.library_new_playlist),
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
@@ -587,6 +760,18 @@ fun PlaylistsPage(
                                     text = "${playlist.trackCount} tracks",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { playlistToDelete = playlist },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = "Delete playlist",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
@@ -731,21 +916,20 @@ fun ArtistsPage(
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
                     ) {
                         Column(
-                            modifier = Modifier.padding(12.dp),
+                            modifier = Modifier.padding(10.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             AsyncArtworkImage(
-                                artworkUri = null,
+                                artworkUri = artist.imageUri,
                                 seed = artist.placeholderSeed,
                                 modifier = Modifier
-                                    .size(110.dp)
-                                    .clip(CircleShape),
-                                circle = true,
-                                cornerDp = 0.dp,
+                                    .size(136.dp)
+                                    .clip(RoundedCornerShape(14.dp)),
+                                cornerDp = 14.dp,
                                 monogram = artist.name
                             )
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
                                 text = artist.name,
@@ -797,6 +981,7 @@ class HomeFragment : Fragment() {
         val c = Screens.container(this)
         val homeVm = ViewModelProvider(this, HomeViewModel.factory(c.homeFeed, c.player))[HomeViewModel::class.java]
         val libVm = ViewModelProvider(this, LibraryViewModel.factory(c.library, c.player))[LibraryViewModel::class.java]
+        val initialPage = arguments?.getInt(ARG_PAGE, 0) ?: 0
 
         return ComposeView(requireContext()).apply {
             setContent {
@@ -809,6 +994,7 @@ class HomeFragment : Fragment() {
                         homeVm = homeVm,
                         libVm = libVm,
                         isScanning = isScanning,
+                        initialPage = initialPage,
                         onSearchClick = {
                             (activity as? ScreenNavigator)?.openTab(ScreenNavigator.Tab.SEARCH)
                         },
@@ -823,6 +1009,17 @@ class HomeFragment : Fragment() {
                         }
                     )
                 }
+            }
+        }
+    }
+
+    companion object {
+        private const val ARG_PAGE = "initial_page"
+
+        @JvmStatic
+        fun newInstance(initialPage: Int = 0): HomeFragment {
+            return HomeFragment().apply {
+                arguments = Bundle().apply { putInt(ARG_PAGE, initialPage) }
             }
         }
     }
