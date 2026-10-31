@@ -15,8 +15,11 @@ import android.view.ViewGroup
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -154,6 +157,7 @@ import ir.mmxkarimi.shockwave.ui.widget.MorphPlayPauseView
 import ir.mmxkarimi.shockwave.ui.widget.WaveMath
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.min
 
 private fun Track.id(): String = id
@@ -223,7 +227,11 @@ fun FullPlayerScreen(
     var palette by remember { mutableStateOf(PlayerPalette.forSeed(0)) }
     var tinyArt by remember { mutableStateOf<Bitmap?>(null) }
     val slide = remember { Animatable(1f) }
+    val swipeX = remember { Animatable(0f) }           // album position while swiping
+    var swipeDir by remember { mutableIntStateOf(0) }  // -1 = swiped left (next), 1 = swiped right (previous)
+    var stageWidth by remember { mutableFloatStateOf(0f) }
     var lastTrackId by remember { mutableStateOf<String?>(null) }
+    val showLyricsNow by rememberUpdatedState(showLyrics)
 
     LaunchedEffect(currentTrack?.id()) {
         val id = currentTrack?.id()
@@ -235,9 +243,25 @@ fun FullPlayerScreen(
             else PlayerPalette.fromColor(0xFFC6F135.toInt())
             tinyArt = null
         }
-        if (lastTrackId != null && id != null && id != lastTrackId && motion) {
-            slide.snapTo(0f)
-            slide.animateTo(1f, tween(320))
+        if (lastTrackId != null && id != null && id != lastTrackId) {
+            // track changed -> always go back to the album photo
+            if (showLyricsNow) vm.toggleLyrics()
+
+            val dir = swipeDir
+            swipeDir = 0
+            if (dir != 0 && stageWidth > 0f) {
+                // came from a swipe: the new album enters from the opposite side
+                if (motion) {
+                    swipeX.snapTo(-dir * stageWidth)
+                    swipeX.animateTo(0f, tween(320, easing = LinearOutSlowInEasing))
+                } else {
+                    swipeX.snapTo(0f)
+                }
+            } else if (motion) {
+                // changed by button / auto next: small slide + fade like before
+                slide.snapTo(0f)
+                slide.animateTo(1f, tween(320))
+            }
         }
         lastTrackId = id
     }
@@ -446,27 +470,44 @@ fun FullPlayerScreen(
         }
 
         val playerStage: @Composable () -> Unit = {
-            var stageSwipeOffset by remember { mutableFloatStateOf(0f) }
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
-                    .pointerInput(Unit) {
-                        detectHorizontalDragGestures(
-                            onDragStart = { stageSwipeOffset = 0f },
-                            onHorizontalDrag = { change, dragAmount ->
-                                change.consume()
-                                stageSwipeOffset += dragAmount
-                            },
-                            onDragEnd = {
-                                val threshold = 100f
-                                if (stageSwipeOffset < -threshold) {
-                                    vm.next()
-                                } else if (stageSwipeOffset > threshold) {
-                                    vm.previous()
+                    .onSizeChanged { stageWidth = it.width.toFloat() }
+                    .draggable(
+                        orientation = Orientation.Horizontal,
+                        state = rememberDraggableState { delta ->
+                            // album follows the finger
+                            scope.launch { swipeX.snapTo(swipeX.value + delta) }
+                        },
+                        onDragStopped = { velocity ->
+                            val w = stageWidth.coerceAtLeast(1f)
+                            val x = swipeX.value
+                            val dir = when {
+                                x < -w * 0.25f || (velocity < -900f && x < 0f) -> -1  // next
+                                x > w * 0.25f || (velocity > 900f && x > 0f) -> 1    // previous
+                                else -> 0
+                            }
+                            if (dir == 0) {
+                                // not enough: bounce back
+                                swipeX.animateTo(0f, spring(dampingRatio = 0.7f))
+                            } else {
+                                swipeDir = dir
+                                // old album flies out
+                                swipeX.animateTo(
+                                    dir * w,
+                                    tween(if (motion) 180 else 0, easing = FastOutLinearInEasing)
+                                )
+                                if (dir < 0) vm.next() else vm.previous()
+                                // if the track did not change (end of queue), bring the album back
+                                delay(600)
+                                if (swipeDir != 0) {
+                                    swipeDir = 0
+                                    swipeX.animateTo(0f, tween(220))
                                 }
                             }
-                        )
-                    }
+                        }
+                    )
             ) {
                 val side = (min(maxWidth.value, maxHeight.value).dp - 16.dp).coerceAtLeast(0.dp)
                 val artworkUpdated by rememberUpdatedState(onArtwork)
@@ -489,8 +530,14 @@ fun FullPlayerScreen(
                         .align(Alignment.Center)
                         .size(side)
                         .graphicsLayer {
-                            alpha = if (showLyrics) 0f else (0.4f + 0.6f * slide.value)
-                            translationX = (1f - slide.value) * 24.dp.toPx()
+                            val w = stageWidth.coerceAtLeast(1f)
+                            val p = min(1f, abs(swipeX.value) / w)   // 0 = center, 1 = fully out
+                            alpha = if (showLyrics) 0f else (0.4f + 0.6f * slide.value) * (1f - 0.5f * p)
+                            translationX = swipeX.value + (1f - slide.value) * 24.dp.toPx()
+                            rotationZ = swipeX.value / w * 12f       // small tilt, like a card
+                            val sc = 1f - 0.1f * p                   // gets a bit smaller
+                            scaleX = sc
+                            scaleY = sc
                         }
                         .shadow(if (showLyrics) 0.dp else 18.dp, RoundedCornerShape(32.dp))
                 )
