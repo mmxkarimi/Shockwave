@@ -6,8 +6,8 @@
     <string name="shortcut_recent">اخیراً</string>
     <string name="shortcut_favorites">مورد علاقه</string>
     <string name="nav_player_unavailable">صفحه‌ی پخش‌کننده هنوز آماده نیست</string>
-    <string name="nav_perm_title">موسیقی شما، روی همین گوشی</string>
-    <string name="nav_perm_body">برای پخش آهنگ‌های ذخیره‌شده روی دستگاه، برنامه به اجازه‌ی خواندن فایل‌های صوتی نیاز دارد. چیزی از گوشی شما خارج نمی‌شود.</string>
+    <string name="nav_perm_title">موسیقی شما، روی همین دستگاه</string>
+    <string name="nav_perm_body">برای پخش آهنگ‌های ذخیره‌شده روی دستگاه، برنامه به اجازه‌ی خواندن فایل‌های صوتی نیاز دارد. چیزی از دستگاه شما خارج نمی‌شود.</string>
     <string name="nav_perm_allow">اجازه دادن</string>
     <string name="nav_perm_folders">انتخاب پوشه‌ها</string>
     <string name="nav_perm_denied">دسترسی خاموش است. می‌توانید آن را در تنظیمات سیستم روشن کنید.</string>
@@ -16,7 +16,7 @@
     <string name="home_see_all">همه</string>
     <string name="home_shuffle">پخش تصادفی</string>
     <string name="home_empty_title">کتابخانه خالی است</string>
-    <string name="home_empty_body">موسیقی به گوشی اضافه کنید و دوباره اسکن کنید.</string>
+    <string name="home_empty_body">موسیقی به دستگاه اضافه کنید و دوباره اسکن کنید.</string>
     <string name="home_empty_rescan">اسکن دوباره</string>
     <string name="home_loading">در حال اسکن کتابخانه…</string>
 
@@ -43,7 +43,7 @@
     <string name="library_history">تاریخچه</string>
     <string name="library_recently_saved">تازه ذخیره‌شده</string>
     <string name="library_play_liked">پخش پسندیده‌ها</string>
-    <string name="library_liked_empty">روی ♥ هر آهنگی بزنید تا اینجا بماند</string>
+    <string name="library_liked_empty">روی علامت قلب در هر آهنگی بزنید تا اینجا بماند</string>
     <string name="library_history_empty">آهنگ‌هایی که پخش می‌کنید اینجا می‌آیند</string>
     <string name="library_playlist_empty">این فهرست خالی است</string>
     <string name="library_empty">هنوز چیزی نیست</string>

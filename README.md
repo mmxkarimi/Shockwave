@@ -2,7 +2,7 @@
 
 [![Build and Release Android APK](https://github.com/mmxkarimi/Shockwave/actions/workflows/release.yaml/badge.svg)](https://github.com/mmxkarimi/Shockwave/actions/workflows/release.yaml) ![License: Apache-2.0](https://img.shields.io/badge/license-Apache%202.0-blue) ![Pre-release v0.2.0](https://img.shields.io/badge/release-v0.2.0%20pre--release-orange)
 
-A fast, battery-friendly **local music player** for Android 8.0+. Your files only — no accounts, no ads, no tracking.
+A fast, battery-friendly **local music player** for Android 10+. Your files only — no accounts, no ads, no tracking.
 
 ## Features
 

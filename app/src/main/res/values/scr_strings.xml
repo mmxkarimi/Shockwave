@@ -6,8 +6,8 @@
     <string name="shortcut_recent">Recently</string>
     <string name="shortcut_favorites">Favorites</string>
     <string name="nav_player_unavailable">The player screen is not available yet</string>
-    <string name="nav_perm_title">Your music, on this phone</string>
-    <string name="nav_perm_body">To play the songs stored on your device, the app needs permission to read audio files. Nothing leaves your phone.</string>
+    <string name="nav_perm_title">Your music, on this device</string>
+    <string name="nav_perm_body">To play the songs stored on your device, the app needs permission to read audio files. Nothing leaves your device.</string>
     <string name="nav_perm_allow">Allow access</string>
     <string name="nav_perm_folders">Choose folders instead</string>
     <string name="nav_perm_denied">Access was turned off. You can allow it in system settings.</string>
@@ -16,7 +16,7 @@
     <string name="home_see_all">See all</string>
     <string name="home_shuffle">Shuffle</string>
     <string name="home_empty_title">Your library is empty</string>
-    <string name="home_empty_body">Add music to your phone, then scan again.</string>
+    <string name="home_empty_body">Add music to your device, then scan again.</string>
     <string name="home_empty_rescan">Scan again</string>
     <string name="home_loading">Scanning your library…</string>
 
