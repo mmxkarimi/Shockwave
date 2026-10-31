@@ -73,6 +73,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -189,6 +190,12 @@ private class PlayerColors(
     val accent: Color           // like button, seek bar, lyrics highlight
 )
 
+/** Remembers which lyrics object belonged to the previous track, so we never show it for the new track. */
+private class LyricsGuard {
+    var trackId: String? = null
+    var stale: Lyrics? = null
+}
+
 // ------------------------------------------------------------------------------------------------
 // Screen
 // ------------------------------------------------------------------------------------------------
@@ -219,6 +226,26 @@ fun FullPlayerScreen(
     val s = state ?: PlaybackState.empty()
     val currentTrack = track
     val duration = s.durationMs()
+
+    // ---- lyrics of the old track must never show for the new track ----
+    val lyricsGuard = remember { LyricsGuard() }
+    var guardTick by remember { mutableIntStateOf(0) }
+    val trackIdNow = currentTrack?.id()
+    if (lyricsGuard.trackId != trackIdNow) {
+        // track just changed: whatever lyrics we hold right now belong to the old track
+        lyricsGuard.stale = if (lyricsGuard.trackId == null) null else lyrics
+        lyricsGuard.trackId = trackIdNow
+    }
+    guardTick.hashCode() // read it, so the screen redraws when the guard is cleared
+    val shownLyrics = lyrics.takeUnless { it != null && it === lyricsGuard.stale && it.lines.isNotEmpty() }
+    LaunchedEffect(trackIdNow) {
+        // safety: if no new lyrics ever arrive, stop waiting after 6 seconds
+        delay(6000)
+        if (lyricsGuard.stale != null) {
+            lyricsGuard.stale = null
+            guardTick++
+        }
+    }
 
     // ---- palette (colors from artwork) ----
     val artworkColors = remember { PrefsSettingsStore(ctx).isArtworkColors() }
@@ -544,7 +571,7 @@ fun FullPlayerScreen(
 
                 if (showLyrics) {
                     LyricsStage(
-                        lyrics = lyrics,
+                        lyrics = shownLyrics,
                         activeLine = activeLine,
                         colors = colors,
                         motion = motion,
@@ -1019,6 +1046,18 @@ private fun LyricsStage(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                if (loading) {
+                    // no progress value = the bar keeps moving (marquee style)
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .width(180.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                        color = colors.accent,
+                        trackColor = colors.text.copy(alpha = 0.14f)
+                    )
+                }
                 Text(
                     text = stringResource(
                         when {
