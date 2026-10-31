@@ -175,29 +175,13 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
         style.setShowActionsInCompactView(0, 1, 2)
         builder.setStyle(style)
 
-        builder.setCategory(NotificationCompat.CATEGORY_TRANSPORT)
-
-        if (Build.VERSION.SDK_INT >= 35) {
-            // Android 15+ Live Updates API method:
-            // Native MediaStyle with live status bar chip, dynamic seekbar, and lock screen live activity.
-            // Custom RemoteViews are omitted so the OS renders the full interactive system media card.
+        // The shade shows this custom view everywhere (with the progress bar); collapsed and expanded are equal.
+        val content = RemoteViews(context.getPackageName(), R.layout.notification_media)
+        fill(content, session, actionFactory, title, artist, position, duration, playing, art)
+        builder.setCustomContentView(content)
+        builder.setCustomBigContentView(content)
+        if (Build.VERSION.SDK_INT >= 31) {
             builder.setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-            val album = metadata.albumTitle
-            if (!album.isNullOrEmpty()) {
-                builder.setSubText(album)
-            }
-            // Request promoted ongoing live status bar chip on Android 15+
-            builder.extras.putBoolean("android.requestPromotedOngoing", playing)
-        } else {
-            // Legacy devices method (< Android 15):
-            // Custom RemoteViews with manual progress bar for older Android versions without system media shade.
-            val content = RemoteViews(context.getPackageName(), R.layout.notification_media)
-            fill(content, session, actionFactory, title, artist, position, duration, playing, art)
-            builder.setCustomContentView(content)
-            builder.setCustomBigContentView(content)
-            if (Build.VERSION.SDK_INT >= 31) {
-                builder.setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-            }
         }
         return builder.build()
     }
