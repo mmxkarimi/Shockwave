@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
@@ -80,14 +81,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.distinctUntilChanged
+import androidx.lifecycle.map
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.domain.model.Playlist
 import ir.mmxkarimi.shockwave.domain.model.Track
-import ir.mmxkarimi.shockwave.ui.components.ExpressiveSubheaderRow
 import ir.mmxkarimi.shockwave.ui.components.TrackDetailsDialog
-import ir.mmxkarimi.shockwave.ui.components.TrackRow
 import ir.mmxkarimi.shockwave.ui.library.AsyncArtworkImage
 import ir.mmxkarimi.shockwave.ui.library.LibraryViewModel
 import ir.mmxkarimi.shockwave.ui.components.shareTrack
@@ -124,26 +137,41 @@ fun UnifiedHomeScreen(
     val favListState = rememberLazyListState()
     val playlistListState = rememberLazyListState()
 
-    val scrollOffset by remember {
-        derivedStateOf {
-            val state = when (pagerState.currentPage) {
-                0 -> tracksListState
-                1 -> favListState
-                2 -> playlistListState
-                else -> null
+    // Title collapse is driven by nested scroll, so every page (lists AND grids) controls it.
+    // Scroll down -> title gets smaller. Scroll back to the top -> title gets bigger.
+    val maxCollapsePx = with(LocalDensity.current) { 100.dp.toPx() }
+    var collapsePx by remember { mutableFloatStateOf(0f) }
+    val collapseConnection = remember(maxCollapsePx) {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // Finger moves up (content scrolls down): shrink the title first.
+                if (available.y < 0f && collapsePx < maxCollapsePx) {
+                    collapsePx = (collapsePx - available.y).coerceIn(0f, maxCollapsePx)
+                }
+                return Offset.Zero
             }
-            if (state == null) 0f
-            else if (state.firstVisibleItemIndex > 0) 100f
-            else state.firstVisibleItemScrollOffset.toFloat().coerceIn(0f, 100f)
+
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
+                // Leftover downward scroll means the list is at the top: grow the title back.
+                if (available.y > 0f && collapsePx > 0f) {
+                    collapsePx = (collapsePx - available.y).coerceIn(0f, maxCollapsePx)
+                }
+                return Offset.Zero
+            }
         }
     }
-    val collapseFraction = scrollOffset / 100f
+    val collapseFraction = collapsePx / maxCollapsePx
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
+            .nestedScroll(collapseConnection)
     ) {
         // Collapsible Large Top App Bar
         Row(
@@ -290,6 +318,11 @@ fun TracksPage(
     val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
     val player = remember { Screens.container(context).player }
 
+    // Id only: position ticks otherwise recompose the whole list every second.
+    val currentTrackId by remember(player) {
+        player.getState().map { it.currentTrack?.id }.distinctUntilChanged()
+    }.observeAsState()
+
     val sortedTracks = remember(tracks, sortMode) {
         when (sortMode) {
             0 -> tracks.sortedBy { it.title.lowercase() }
@@ -355,7 +388,7 @@ fun TracksPage(
             ) {
                 item {
                     Box {
-                        ExpressiveSubheaderRow(
+                        TracksHeader(
                             itemCount = sortedTracks.size,
                             sortLabel = sortLabel,
                             onSortClick = { sortMenuOpen = true },
@@ -397,8 +430,9 @@ fun TracksPage(
 
                 items(sortedTracks, key = { it.id }) { track ->
                     Box {
-                        TrackRow(
+                        BorderlessTrackRow(
                             track = track,
+                            isPlaying = track.id == currentTrackId,
                             onClick = {
                                 libVm.play(sortedTracks, sortedTracks.indexOf(track), "All Tracks")
                             },
@@ -566,7 +600,7 @@ fun FavoritesPage(
                     contentPadding = PaddingValues(top = 10.dp, bottom = 120.dp)
                 ) {
                     item {
-                        ExpressiveSubheaderRow(
+                        TracksHeader(
                             itemCount = liked.size,
                             sortLabel = null,
                             onSortClick = null,
@@ -581,7 +615,7 @@ fun FavoritesPage(
 
                     items(liked, key = { it.id }) { track ->
                         Box {
-                            TrackRow(
+                            BorderlessTrackRow(
                                 track = track,
                                 onClick = {
                                     libVm.play(liked, liked.indexOf(track), "Favorites")
@@ -1051,6 +1085,146 @@ fun ArtistsPage(
             )
         }
     }
+}
+
+/**
+ * Play + Shuffle as a Material 3 Expressive connected button group.
+ * The two buttons touch, with small inner corners and big outer corners.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun TracksHeader(
+    itemCount: Int,
+    sortLabel: String?,
+    onSortClick: (() -> Unit)?,
+    onShuffleClick: () -> Unit,
+    onPlayAllClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "$itemCount tracks",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (sortLabel != null && onSortClick != null) {
+                TextButton(onClick = onSortClick) {
+                    Text(sortLabel)
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
+        ) {
+            Button(
+                onClick = onPlayAllClick,
+                shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+            ) {
+                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Play")
+            }
+            FilledTonalButton(
+                onClick = onShuffleClick,
+                shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+            ) {
+                Icon(Icons.Default.Shuffle, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Shuffle")
+            }
+        }
+    }
+}
+
+/**
+ * Flat track row: no card, no border, no divider. Just the content on the page surface.
+ */
+@Composable
+fun BorderlessTrackRow(
+    track: Track,
+    onClick: () -> Unit,
+    onMoreClick: () -> Unit,
+    isPlaying: Boolean = false
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncArtworkImage(
+            artworkUri = track.artworkUri,
+            seed = track.placeholderSeed,
+            modifier = Modifier
+                .size(52.dp)
+                .clip(RoundedCornerShape(12.dp)),
+            cornerDp = 12.dp
+        )
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = track.title,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = if (isPlaying) FontWeight.ExtraBold else FontWeight.SemiBold
+                ),
+                color = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = track.artistName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Text(
+            text = formatTrackDuration(track.durationMs.toLong()),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        IconButton(onClick = onMoreClick) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "More",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+private fun formatTrackDuration(ms: Long): String {
+    val totalSeconds = ms / 1000
+    return "%d:%02d".format(totalSeconds / 60, totalSeconds % 60)
 }
 
 class HomeFragment : Fragment() {
