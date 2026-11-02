@@ -404,7 +404,7 @@ fun SettingsScreen(
                                             }
                                         }
                                     }
-                                    if (result.empty) {
+                                    if (result.isEmpty()) {
                                         notFound++
                                     } else {
                                         downloaded++
