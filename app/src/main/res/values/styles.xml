@@ -12,7 +12,7 @@
         <item name="android:tint">?attr/mpOnSurfaceVariant</item>
     </style>
 
-    <!-- v1 type ramp (DESIGN.md section 3): Google Sans Flex (Latin) / Vazirmatn (font-fa) via @font/mp_sans.
+    <!-- v1 type ramp: Google Sans Flex (Latin) / Vazirmatn (font-fa) via @font/mp_sans.
          The weight picks a variable-font instance from mp_sans.xml; API 26-27 fall back to textStyle. -->
     <style name="TextAppearance.Shockwave.Display" parent="">
         <item name="android:textSize">@dimen/mp_text_display</item>

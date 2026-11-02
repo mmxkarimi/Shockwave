@@ -26,6 +26,7 @@ class SettingsStore(context: Context) {
     private val batterySaver = MutableLiveData(readEnum(K_BATTERY_SAVER, BatterySaverMode.AUTO))
     private val includedFolders = MutableLiveData(readSet(K_INCLUDE))
     private val excludedFolders = MutableLiveData(readSet(K_EXCLUDE))
+    private val tracksSortMode = MutableLiveData(prefs.getInt(K_TRACKS_SORT_MODE, 0))
 
     fun theme(): LiveData<ThemeMode> = theme
 
@@ -104,6 +105,13 @@ class SettingsStore(context: Context) {
         publish(excludedFolders, Collections.unmodifiableSet(HashSet(folders)))
     }
 
+    fun tracksSortMode(): LiveData<Int> = tracksSortMode
+
+    fun setTracksSortMode(mode: Int) {
+        prefs.edit().putInt(K_TRACKS_SORT_MODE, mode).apply()
+        publish(tracksSortMode, mode)
+    }
+
     private fun <E : Enum<E>> readEnum(key: String, fallback: E): E {
         return try {
             val stored = prefs.getString(key, null)
@@ -132,6 +140,7 @@ class SettingsStore(context: Context) {
         private const val K_BATTERY_SAVER = "battery_saver"
         private const val K_INCLUDE = "folders_include"
         private const val K_EXCLUDE = "folders_exclude"
+        private const val K_TRACKS_SORT_MODE = "tracks_sort_mode"
 
         private fun <T> publish(live: MutableLiveData<T>, value: T) {
             if (Looper.myLooper() == Looper.getMainLooper()) live.setValue(value) else live.postValue(value)

@@ -154,4 +154,16 @@
     <string name="settings_license">Open Source Notice</string>
     <string name="settings_license_sub">Mowj MIT License</string>
     <string name="settings_license_title">Mowj MIT License</string>
+
+    <plurals name="tracks_count">
+        <item quantity="one">%1$s track</item>
+        <item quantity="other">%1$s tracks</item>
+    </plurals>
+
+    <string name="settings_download_all_lyrics">Download All Lyrics</string>
+    <string name="settings_download_all_lyrics_sub">Preload lyrics for all tracks in library</string>
+    <string name="downloading_lyrics_dialog_title">Downloading Lyrics</string>
+    <string name="downloading_lyrics_progress">%1$s / %2$s</string>
+    <string name="downloading_lyrics_complete">Downloaded %1$d new lyrics (%2$d already cached, %3$d not found)</string>
+    <string name="downloading_lyrics_no_tracks">No tracks found in library</string>
 </resources>

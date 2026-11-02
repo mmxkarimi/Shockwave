@@ -34,4 +34,7 @@ interface SettingsStore {
 
     fun isBatterySaver(): Boolean
     fun setBatterySaver(on: Boolean)
+
+    fun getTracksSortMode(): Int
+    fun setTracksSortMode(mode: Int)
 }

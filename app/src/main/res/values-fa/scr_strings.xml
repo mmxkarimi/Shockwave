@@ -61,7 +61,7 @@
     <string name="settings_theme_system">سیستم</string>
     <string name="settings_theme_light">روشن</string>
     <string name="settings_theme_dark">تیره</string>
-    <string name="settings_theme_black">سیاه</string>
+    <string name="settings_theme_black">آمولد ( سیاه خالص )</string>
     <string name="settings_dynamic_color">رنگ پویا</string>
     <string name="settings_dynamic_color_sub">استفاده از رنگ‌های تصویر زمینه (متریال یو)</string>
     <string name="settings_artwork_colors">رنگ از کاور</string>
@@ -104,7 +104,7 @@
     <string name="settings_sleep_end">پایان آهنگ</string>
     <string name="settings_sleep_minutes_f">%1$s دقیقه</string>
     <string name="settings_equalizer">اکولایزر</string>
-    <string name="settings_equalizer_sub">باز کردن اکولایزر سیستم</string>
+    <string name="settings_equalizer_sub">باز کردن  تنظیمات اکولایزر دستگاه</string>
     <string name="settings_equalizer_not_found">هیچ برنامه اکولایزری در این دستگاه یافت نشد</string>
     <string name="library_menu_delete_track">حذف آهنگ</string>
     <string name="library_delete_track_title">حذف آهنگ؟</string>
@@ -154,4 +154,16 @@
     <string name="settings_license">یادداشت‌های متن‌باز</string>
     <string name="settings_license_sub">مجوز MIT نرم‌افزار موج</string>
     <string name="settings_license_title">مجوز نرم‌افزار موج (MIT)</string>
+
+    <plurals name="tracks_count">
+        <item quantity="one">%1$s آهنگ</item>
+        <item quantity="other">%1$s آهنگ</item>
+    </plurals>
+
+    <string name="settings_download_all_lyrics">دانلود تمام متن‌ها</string>
+    <string name="settings_download_all_lyrics_sub">پیش‌بارگذاری متن برای تمام آهنگ‌های کتابخانه</string>
+    <string name="downloading_lyrics_dialog_title">در حال دریافت متن‌ها</string>
+    <string name="downloading_lyrics_progress">%1$s از %2$s</string>
+    <string name="downloading_lyrics_complete">متن %1$d آهنگ دانلود شد (%2$d از قبل ذخیره شده، %3$d پیدا نشد)</string>
+    <string name="downloading_lyrics_no_tracks">هیچ آهنگی در کتابخانه یافت نشد</string>
 </resources>

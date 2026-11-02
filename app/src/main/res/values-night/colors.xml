@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark scheme (DESIGN.md 2.1), seed lapis, tertiary turquoise. -->
     <color name="mp_background">#0F1216</color>
     <color name="mp_surface_container_lowest">#0A0D10</color>
     <color name="mp_surface_container_low">#171A1F</color>

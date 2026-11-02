@@ -53,6 +53,7 @@ class MorphPlayPauseView @JvmOverloads constructor(
     }
 
     private val cookiePath = Path()
+    private val bufferPath = Path()
     private val leftPath = Path()
     private val rightPath = Path()
     private val playPath = Path()
@@ -197,12 +198,30 @@ class MorphPlayPauseView @JvmOverloads constructor(
             canvas.restore()
         }
 
-        // 2. Buffering ring indicator if active
+        // 2. Buffering ring indicator if active: morphs and rotates with the cookie shape (no halo)
         if (isBuffering) {
             bufferPaint.color = fgColor
             bufferPaint.strokeWidth = 3f * resources.displayMetrics.density
             bufferPaint.alpha = 180
-            canvas.drawCircle(cx, cy, radius * 0.96f, bufferPaint)
+            val bufferRingRadius = radius * 0.92f
+            if (morphFraction <= 0.001f) {
+                canvas.drawCircle(cx, cy, bufferRingRadius, bufferPaint)
+            } else {
+                canvas.save()
+                canvas.rotate(spinAngle, cx, cy)
+                bufferPath.reset()
+                val points = 120
+                for (i in 0 until points) {
+                    val theta = (i * 2.0 * PI) / points
+                    val r = bufferRingRadius * ShapeMath.radius(theta, morphFraction)
+                    val px = cx + r * cos(theta).toFloat()
+                    val py = cy + r * sin(theta).toFloat()
+                    if (i == 0) bufferPath.moveTo(px, py) else bufferPath.lineTo(px, py)
+                }
+                bufferPath.close()
+                canvas.drawPath(bufferPath, bufferPaint)
+                canvas.restore()
+            }
         }
 
         // 3. Smooth icon morph: Play triangle (f = 0) <-> Pause two bars (f = 1)

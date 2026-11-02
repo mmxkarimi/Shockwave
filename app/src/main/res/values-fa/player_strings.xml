@@ -20,7 +20,7 @@
     <string name="player_output_device">همین گوشی</string>
     <string name="player_nothing_playing">چیزی پخش نمی‌شود</string>
     <string name="player_seek">جابه‌جایی</string>
-    <string name="lyrics_loading">در جست‌وجوی متن ترانه…</string>
+    <string name="lyrics_loading">در حالُ جست‌وجوی متن ترانه…</string>
     <string name="lyrics_none">هنوز متنی برای این آهنگ نیست</string>
     <string name="lyrics_none_hint">یک فایل ‎.lrc‎ کنار آهنگ بگذارید.</string>
     <string name="lyrics_back_to_current">برگشت به خط فعلی</string>

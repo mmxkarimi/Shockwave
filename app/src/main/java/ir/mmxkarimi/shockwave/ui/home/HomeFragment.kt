@@ -1,6 +1,8 @@
 package ir.mmxkarimi.shockwave.ui.home
 
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -96,9 +98,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.map
+import java.text.NumberFormat
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.domain.model.Playlist
 import ir.mmxkarimi.shockwave.domain.model.Track
+import ir.mmxkarimi.shockwave.ui.components.TrackDeleteHelper
 import ir.mmxkarimi.shockwave.ui.components.TrackDetailsDialog
 import ir.mmxkarimi.shockwave.ui.library.AsyncArtworkImage
 import ir.mmxkarimi.shockwave.ui.library.LibraryViewModel
@@ -308,14 +312,26 @@ fun TracksPage(
     onAddToPlaylist: (Track) -> Unit
 ) {
     val tracks by libVm.getAllTracks().observeAsState(emptyList())
-    var sortMode by remember { mutableIntStateOf(0) } // 0: Title, 1: Artist, 2: Duration, 3: Date added
+    val context = LocalContext.current
+    val settingsStore = remember { PrefsSettingsStore(context) }
+    var sortMode by remember { mutableIntStateOf(settingsStore.getTracksSortMode()) } // 0: Title, 1: Artist, 2: Duration, 3: Date added
     var sortMenuOpen by remember { mutableStateOf(false) }
     var trackActionTarget by remember { mutableStateOf<Track?>(null) }
     var trackToDelete by remember { mutableStateOf<Track?>(null) }
+    var pendingStorageTrack by remember { mutableStateOf<Track?>(null) }
     var trackForDetails by remember { mutableStateOf<Track?>(null) }
-    val context = LocalContext.current
     val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
     val player = remember { Screens.container(context).player }
+
+    val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val t = pendingStorageTrack
+            if (t != null) {
+                libraryAdmin.deleteTrack(t.id)
+                pendingStorageTrack = null
+            }
+        }
+    }
 
     // Id only: position ticks otherwise recompose the whole list every second.
     val currentTrackId by remember(player) {
@@ -356,7 +372,11 @@ fun TracksPage(
                     val t = trackToDelete
                     trackToDelete = null
                     if (t != null) {
-                        libraryAdmin.deleteTrack(t.id)
+                        pendingStorageTrack = t
+                        TrackDeleteHelper.deleteTrack(context, t, deleteLauncher) {
+                            libraryAdmin.deleteTrack(t.id)
+                            pendingStorageTrack = null
+                        }
                     }
                 }) {
                     Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
@@ -416,6 +436,7 @@ fun TracksPage(
                                     text = { Text(label) },
                                     onClick = {
                                         sortMode = mode
+                                        settingsStore.setTracksSortMode(mode)
                                         sortMenuOpen = false
                                     },
                                     leadingIcon = if (sortMode == mode) {
@@ -527,10 +548,21 @@ fun FavoritesPage(
     val liked by libVm.getLiked().observeAsState(emptyList())
     var trackActionTarget by remember { mutableStateOf<Track?>(null) }
     var trackToDelete by remember { mutableStateOf<Track?>(null) }
+    var pendingStorageTrack by remember { mutableStateOf<Track?>(null) }
     var trackForDetails by remember { mutableStateOf<Track?>(null) }
     val context = LocalContext.current
     val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
     val player = remember { Screens.container(context).player }
+
+    val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val t = pendingStorageTrack
+            if (t != null) {
+                libraryAdmin.deleteTrack(t.id)
+                pendingStorageTrack = null
+            }
+        }
+    }
 
     if (trackToDelete != null) {
         AlertDialog(
@@ -542,7 +574,11 @@ fun FavoritesPage(
                     val t = trackToDelete
                     trackToDelete = null
                     if (t != null) {
-                        libraryAdmin.deleteTrack(t.id)
+                        pendingStorageTrack = t
+                        TrackDeleteHelper.deleteTrack(context, t, deleteLauncher) {
+                            libraryAdmin.deleteTrack(t.id)
+                            pendingStorageTrack = null
+                        }
                     }
                 }) {
                     Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
@@ -872,7 +908,7 @@ fun PlaylistsPage(
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "${playlist.trackCount} tracks",
+                                    text = formatTrackCount(playlist.trackCount),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -1055,7 +1091,7 @@ fun ArtistsPage(
                             )
 
                             Text(
-                                text = "${artist.trackCount} tracks",
+                                text = formatTrackCount(artist.trackCount),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
@@ -1086,6 +1122,14 @@ fun ArtistsPage(
     }
 }
 
+@Composable
+private fun formatTrackCount(count: Int): String {
+    val context = LocalContext.current
+    val locale = context.resources.configuration.locales[0]
+    val formattedCount = NumberFormat.getIntegerInstance(locale).format(count)
+    return context.resources.getQuantityString(R.plurals.tracks_count, count, formattedCount)
+}
+
 /**
  * Play + Shuffle as a touching pair of buttons. The leading one (filled) keeps square right corners, the
  * trailing one (tonal) square left corners, so they read as one segmented control; outer corners stay rounded.
@@ -1109,7 +1153,7 @@ fun TracksHeader(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "$itemCount tracks",
+                text = formatTrackCount(itemCount),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )

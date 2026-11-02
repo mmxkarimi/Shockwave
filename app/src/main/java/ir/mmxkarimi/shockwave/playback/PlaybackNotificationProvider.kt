@@ -35,6 +35,9 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.ui.player.PlayerFormat
+import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
+import ir.mmxkarimi.shockwave.ui.theme.AccentScheme
+import ir.mmxkarimi.shockwave.ui.theme.Tokens
 import ir.mmxkarimi.shockwave.ui.widget.PlaceholderArt
 import java.util.Locale
 import java.util.Objects
@@ -189,9 +192,8 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
                 .setGroup(DefaultMediaNotificationProvider.GROUP_KEY)
         if (art != null) builder.setLargeIcon(art)
         if (metadata.artworkUri == null) {
-            // No cover: tint the small icon / app name with the same seed colour as the placeholder art.
-            val seed = metadata.extras?.getInt("seed", 0) ?: 0
-            builder.setColor(PlaceholderArt.seedColor(seed))
+            // No cover: tint the small icon / notification with the app color (Material You + fallback).
+            builder.setColor(getAppColor())
         }
 
         // Prev / play-pause / next as media actions: the system media controls read them from the session.
@@ -272,6 +274,20 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
                 actionFactory.createMediaActionPendingIntent(session, Player.COMMAND_PLAY_PAUSE))
         views.setOnClickPendingIntent(R.id.np_next,
                 actionFactory.createMediaActionPendingIntent(session, Player.COMMAND_SEEK_TO_NEXT))
+    }
+
+    private fun getAppColor(): Int {
+        val dark = Tokens.isDark(context)
+        val isDynamic = PrefsSettingsStore(context).isDynamicColor()
+        if (isDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val resId = if (dark) android.R.color.system_accent1_200 else android.R.color.system_accent1_600
+            try {
+                return ContextCompat.getColor(context, resId)
+            } catch (ignored: Exception) {
+                // fall through
+            }
+        }
+        return AccentScheme.base(dark).primary
     }
 
     private fun getString(resId: Int): String {

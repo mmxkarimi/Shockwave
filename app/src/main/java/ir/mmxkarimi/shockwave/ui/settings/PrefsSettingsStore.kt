@@ -69,4 +69,12 @@ class PrefsSettingsStore(
     override fun setBatterySaver(on: Boolean) {
         data.setBatterySaver(if (on) BatterySaverMode.ON else BatterySaverMode.AUTO)
     }
+
+    override fun getTracksSortMode(): Int {
+        return data.tracksSortMode().value ?: 0
+    }
+
+    override fun setTracksSortMode(mode: Int) {
+        data.setTracksSortMode(mode)
+    }
 }

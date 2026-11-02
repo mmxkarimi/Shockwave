@@ -1,6 +1,8 @@
 package ir.mmxkarimi.shockwave.ui.library
 
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -64,6 +66,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.domain.model.Track
+import ir.mmxkarimi.shockwave.ui.components.TrackDeleteHelper
 import ir.mmxkarimi.shockwave.ui.components.TrackDetailsDialog
 import ir.mmxkarimi.shockwave.ui.components.TrackRow
 import ir.mmxkarimi.shockwave.ui.components.shareTrack
@@ -87,10 +90,21 @@ fun TrackListScreen(
     val header by vm.getHeader().observeAsState()
     var trackActionTarget by remember { mutableStateOf<Track?>(null) }
     var trackToDelete by remember { mutableStateOf<Track?>(null) }
+    var pendingStorageTrack by remember { mutableStateOf<Track?>(null) }
     var trackForDetails by remember { mutableStateOf<Track?>(null) }
     val context = LocalContext.current
     val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
     val player = remember { Screens.container(context).player }
+
+    val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val t = pendingStorageTrack
+            if (t != null) {
+                libraryAdmin.deleteTrack(t.id)
+                pendingStorageTrack = null
+            }
+        }
+    }
 
     val screenTitle = when (kind) {
         ScreenNavigator.TrackList.LIKED -> stringResource(R.string.library_liked)
@@ -109,7 +123,11 @@ fun TrackListScreen(
                     val t = trackToDelete
                     trackToDelete = null
                     if (t != null) {
-                        libraryAdmin.deleteTrack(t.id)
+                        pendingStorageTrack = t
+                        TrackDeleteHelper.deleteTrack(context, t, deleteLauncher) {
+                            libraryAdmin.deleteTrack(t.id)
+                            pendingStorageTrack = null
+                        }
                     }
                 }) {
                     Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Light scheme (DESIGN.md 2.1). values-night holds the dark scheme. -->
+    <!-- Light scheme. values-night holds the dark scheme. -->
     <color name="mp_background">#F7F9FF</color>
     <color name="mp_surface_container_lowest">#FFFFFF</color>
     <color name="mp_surface_container_low">#F1F3FA</color>

@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,8 +58,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,8 +75,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import ir.mmxkarimi.shockwave.R
+import ir.mmxkarimi.shockwave.domain.model.Lyrics
 import ir.mmxkarimi.shockwave.domain.model.SleepTimer
 import ir.mmxkarimi.shockwave.ui.components.ExpressiveGroupCard
 import ir.mmxkarimi.shockwave.ui.components.ExpressiveGroupItemRow
@@ -81,6 +86,14 @@ import ir.mmxkarimi.shockwave.ui.nav.ScreenNavigator
 import ir.mmxkarimi.shockwave.ui.nav.Screens
 import ir.mmxkarimi.shockwave.ui.theme.ThemeMode
 import ir.mmxkarimi.shockwave.ui.theme.ShockwaveTheme
+import java.text.NumberFormat
+import kotlin.coroutines.resume
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 
 @Composable
 fun SettingsScreen(
@@ -90,9 +103,15 @@ fun SettingsScreen(
     val state by vm.getState().observeAsState()
     val scrollState = rememberScrollState()
     val context = LocalContext.current
-    val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
+    val container = remember { Screens.container(context) }
+    val coroutineScope = rememberCoroutineScope()
+    val libraryAdmin = remember { container.libraryAdmin() }
     val isScanning by libraryAdmin.isScanning().observeAsState(false)
     var scanStatusMessage by remember { mutableStateOf<String?>(null) }
+    var showDownloadLyricsDialog by remember { mutableStateOf(false) }
+    var downloadProgress by remember { mutableIntStateOf(0) }
+    var downloadTotal by remember { mutableIntStateOf(0) }
+    var downloadJob by remember { mutableStateOf<Job?>(null) }
 
     Column(
         modifier = Modifier
@@ -351,6 +370,52 @@ fun SettingsScreen(
                             )
                         }
                     )
+
+                    ExpressiveGroupItemRow(
+                        title = stringResource(R.string.settings_download_all_lyrics),
+                        subtitle = stringResource(R.string.settings_download_all_lyrics_sub),
+                        onClick = {
+                            val tracks = container.library.getAllTracks().value ?: emptyList()
+                            if (tracks.isEmpty()) {
+                                Toast.makeText(context, context.getString(R.string.downloading_lyrics_no_tracks), Toast.LENGTH_SHORT).show()
+                                return@ExpressiveGroupItemRow
+                            }
+                            showDownloadLyricsDialog = true
+                            downloadProgress = 0
+                            downloadTotal = tracks.size
+                            downloadJob = coroutineScope.launch {
+                                var downloaded = 0
+                                var notFound = 0
+                                for ((index, track) in tracks.withIndex()) {
+                                    if (!isActive) break
+                                    downloadProgress = index + 1
+                                    val liveData = container.lyrics.lyricsFor(track)
+                                    val result = withContext(Dispatchers.Main) {
+                                        suspendCancellableCoroutine<Lyrics> { cont ->
+                                            val observer = object : Observer<Lyrics> {
+                                                override fun onChanged(value: Lyrics) {
+                                                    liveData.removeObserver(this)
+                                                    if (cont.isActive) cont.resume(value)
+                                                }
+                                            }
+                                            liveData.observeForever(observer)
+                                            cont.invokeOnCancellation {
+                                                liveData.removeObserver(observer)
+                                            }
+                                        }
+                                    }
+                                    if (result.empty) {
+                                        notFound++
+                                    } else {
+                                        downloaded++
+                                    }
+                                }
+                                showDownloadLyricsDialog = false
+                                val msg = context.getString(R.string.downloading_lyrics_complete, downloaded, 0, notFound)
+                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -453,6 +518,58 @@ SOFTWARE.
                         confirmButton = {
                             TextButton(onClick = { showLicenseDialog = false }) {
                                 Text(stringResource(R.string.action_close))
+                            }
+                        }
+                    )
+                }
+
+                if (showDownloadLyricsDialog) {
+                    val locale = context.resources.configuration.locales[0]
+                    val nf = NumberFormat.getIntegerInstance(locale)
+                    AlertDialog(
+                        onDismissRequest = {
+                            downloadJob?.cancel()
+                            showDownloadLyricsDialog = false
+                        },
+                        title = {
+                            Text(
+                                text = stringResource(R.string.downloading_lyrics_dialog_title),
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        },
+                        text = {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                val progressRatio = if (downloadTotal > 0) downloadProgress.toFloat() / downloadTotal else 0f
+                                LinearProgressIndicator(
+                                    progress = { progressRatio },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                )
+                                Text(
+                                    text = stringResource(
+                                        R.string.downloading_lyrics_progress,
+                                        nf.format(downloadProgress),
+                                        nf.format(downloadTotal)
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        confirmButton = {},
+                        dismissButton = {
+                            TextButton(
+                                onClick = {
+                                    downloadJob?.cancel()
+                                    showDownloadLyricsDialog = false
+                                }
+                            ) {
+                                Text(stringResource(R.string.action_cancel))
                             }
                         }
                     )
