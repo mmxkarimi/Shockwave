@@ -5,6 +5,10 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.Shader
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -31,6 +35,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.ui.player.PlayerFormat
+import ir.mmxkarimi.shockwave.ui.widget.PlaceholderArt
 import java.util.Locale
 import java.util.Objects
 import java.util.concurrent.CancellationException
@@ -59,6 +64,10 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
     /** Scaled copy of the last cover (identity-keyed: the cache returns the same bitmap per track). */
     private var artworkSource: Bitmap? = null
     private var artworkScaled: Bitmap? = null
+
+    /** Placeholder art for tracks without a cover: keyed by seed so it is built once per track. */
+    private var placeholderSeed: Int? = null
+    private var placeholderBitmap: Bitmap? = null
 
     override fun createNotification(
         session: MediaSession,
@@ -95,7 +104,7 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
         onNotificationChanged: MediaNotification.Provider.Callback,
     ): Bitmap? {
         val metadata = session.getPlayer().getMediaMetadata()
-        if (metadata.artworkUri == null) return null
+        if (metadata.artworkUri == null) return placeholderArtwork(metadata)
         val sessionLoader = session.getBitmapLoader()
         var loader = artworkLoader
         if (loader == null || artworkLoaderSource !== sessionLoader) {
@@ -132,6 +141,25 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
         }
     }
 
+    /** A seed-coloured gradient placeholder so tracks without a cover keep the app's colours in the notification. */
+    private fun placeholderArtwork(metadata: MediaMetadata): Bitmap {
+        val seed = metadata.extras?.getInt("seed", 0) ?: 0
+        val cachedSeed = placeholderSeed
+        val cached = placeholderBitmap
+        if (cachedSeed == seed && cached != null) return cached
+        val size = NOTIFICATION_ART_PX
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val colors = PlaceholderArt.colors(seed)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        paint.shader = LinearGradient(0f, 0f, size.toFloat(), size.toFloat(),
+                colors[0], colors[1], Shader.TileMode.CLAMP)
+        canvas.drawRect(0f, 0f, size.toFloat(), size.toFloat(), paint)
+        placeholderSeed = seed
+        placeholderBitmap = bitmap
+        return bitmap
+    }
+
     private fun build(session: MediaSession, actionFactory: ActionFactory, artwork: Bitmap?): Notification {
         val player = session.getPlayer()
         val metadata = player.getMediaMetadata()
@@ -160,6 +188,11 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
                 .setOngoing(playing)
                 .setGroup(DefaultMediaNotificationProvider.GROUP_KEY)
         if (art != null) builder.setLargeIcon(art)
+        if (metadata.artworkUri == null) {
+            // No cover: tint the small icon / app name with the same seed colour as the placeholder art.
+            val seed = metadata.extras?.getInt("seed", 0) ?: 0
+            builder.setColor(PlaceholderArt.seedColor(seed))
+        }
 
         // Prev / play-pause / next as media actions: the system media controls read them from the session.
         builder.addAction(actionFactory.createMediaAction(session,
