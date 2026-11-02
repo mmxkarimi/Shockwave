@@ -84,8 +84,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Shuffle
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.geometry.Offset
@@ -93,6 +91,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.distinctUntilChanged
@@ -1088,10 +1087,9 @@ fun ArtistsPage(
 }
 
 /**
- * Play + Shuffle as a Material 3 Expressive connected button group.
- * The two buttons touch, with small inner corners and big outer corners.
+ * Play + Shuffle as a touching pair of buttons. The leading one (filled) keeps square right corners, the
+ * trailing one (tonal) square left corners, so they read as one segmented control; outer corners stay rounded.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TracksHeader(
     itemCount: Int,
@@ -1129,13 +1127,10 @@ fun TracksHeader(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-        ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
             Button(
                 onClick = onPlayAllClick,
-                shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
+                shape = ConnectedButtonShapes.leading,
                 modifier = Modifier
                     .weight(1f)
                     .height(52.dp)
@@ -1146,7 +1141,7 @@ fun TracksHeader(
             }
             FilledTonalButton(
                 onClick = onShuffleClick,
-                shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
+                shape = ConnectedButtonShapes.trailing,
                 modifier = Modifier
                     .weight(1f)
                     .height(52.dp)
@@ -1157,6 +1152,14 @@ fun TracksHeader(
             }
         }
     }
+}
+
+/** Outer corners rounded, inner corners square, for two buttons that touch edge to edge. */
+private object ConnectedButtonShapes {
+    private val outer: Dp = 26.dp
+
+    val leading: RoundedCornerShape = RoundedCornerShape(topStart = outer, bottomStart = outer)
+    val trailing: RoundedCornerShape = RoundedCornerShape(topEnd = outer, bottomEnd = outer)
 }
 
 /**
