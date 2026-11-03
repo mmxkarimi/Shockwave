@@ -39,7 +39,6 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.ui.player.PlayerFormat
-import ir.mmxkarimi.shockwave.data.settings.SettingsStore
 import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
 import ir.mmxkarimi.shockwave.ui.settings.ThemeApplier
 import ir.mmxkarimi.shockwave.ui.theme.AccentScheme
