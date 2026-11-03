@@ -77,6 +77,7 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import ir.mmxkarimi.shockwave.BuildConfig
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.domain.model.Lyrics
 import ir.mmxkarimi.shockwave.domain.model.SleepTimer
@@ -579,7 +580,7 @@ SOFTWARE.
                 ExpressiveGroupCard(title = stringResource(R.string.settings_about)) {
                     ExpressiveGroupItemRow(
                         title = stringResource(R.string.app_name),
-                        subtitle = stringResource(R.string.settings_version, "1.1.2")
+                        subtitle = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME)
                     )
                     ExpressiveGroupItemRow(
                         title = stringResource(R.string.settings_source_code),
