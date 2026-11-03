@@ -579,7 +579,7 @@ SOFTWARE.
                 ExpressiveGroupCard(title = stringResource(R.string.settings_about)) {
                     ExpressiveGroupItemRow(
                         title = stringResource(R.string.app_name),
-                        subtitle = stringResource(R.string.settings_version, "1.0.1")
+                        subtitle = stringResource(R.string.settings_version, "1.1.2")
                     )
                     ExpressiveGroupItemRow(
                         title = stringResource(R.string.settings_source_code),

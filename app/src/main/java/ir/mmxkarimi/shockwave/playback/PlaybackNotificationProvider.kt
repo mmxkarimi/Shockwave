@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Shader
@@ -16,6 +17,7 @@ import android.widget.RemoteViews
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.IconCompat
 import androidx.media3.common.C
 import androidx.media3.common.MediaMetadata
@@ -38,7 +40,6 @@ import ir.mmxkarimi.shockwave.ui.player.PlayerFormat
 import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
 import ir.mmxkarimi.shockwave.ui.theme.AccentScheme
 import ir.mmxkarimi.shockwave.ui.theme.Tokens
-import ir.mmxkarimi.shockwave.ui.widget.PlaceholderArt
 import java.util.Locale
 import java.util.Objects
 import java.util.concurrent.CancellationException
@@ -68,8 +69,8 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
     private var artworkSource: Bitmap? = null
     private var artworkScaled: Bitmap? = null
 
-    /** Placeholder art for tracks without a cover: keyed by seed so it is built once per track. */
-    private var placeholderSeed: Int? = null
+    /** Placeholder art for tracks without a cover: keyed by the app colour so it is built once per colour. */
+    private var placeholderColor: Int? = null
     private var placeholderBitmap: Bitmap? = null
 
     override fun createNotification(
@@ -144,21 +145,24 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
         }
     }
 
-    /** A seed-coloured gradient placeholder so tracks without a cover keep the app's colours in the notification. */
-    private fun placeholderArtwork(metadata: MediaMetadata): Bitmap {
-        val seed = metadata.extras?.getInt("seed", 0) ?: 0
-        val cachedSeed = placeholderSeed
+    /**
+     * App-coloured gradient placeholder (Material You accent when enabled, otherwise the app's fallback accent)
+     * so tracks without a cover match the app instead of using per-track colours. Rebuilt when the colour changes
+     * (theme / dynamic-colour toggle), cached otherwise.
+     */
+    private fun placeholderArtwork(@Suppress("UNUSED_PARAMETER") metadata: MediaMetadata): Bitmap {
+        val base = getAppColor()
         val cached = placeholderBitmap
-        if (cachedSeed == seed && cached != null) return cached
+        if (placeholderColor == base && cached != null) return cached
         val size = NOTIFICATION_ART_PX
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        val colors = PlaceholderArt.colors(seed)
+        val end = ColorUtils.blendARGB(base, if (Tokens.isDark(context)) Color.BLACK else Color.WHITE, 0.45f)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint.shader = LinearGradient(0f, 0f, size.toFloat(), size.toFloat(),
-                colors[0], colors[1], Shader.TileMode.CLAMP)
+                base, end, Shader.TileMode.CLAMP)
         canvas.drawRect(0f, 0f, size.toFloat(), size.toFloat(), paint)
-        placeholderSeed = seed
+        placeholderColor = base
         placeholderBitmap = bitmap
         return bitmap
     }
