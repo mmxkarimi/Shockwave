@@ -7,13 +7,16 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -21,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.domain.model.Track
@@ -174,23 +176,34 @@ fun TrackDetailsDialog(
             )
         },
         text = {
+            val items = buildList {
+                add(stringResource(R.string.track_details_title_label) to details.title)
+                add(stringResource(R.string.track_details_artist) to details.artist)
+                add(stringResource(R.string.track_details_album) to details.album)
+                details.genre?.let { add(stringResource(R.string.track_details_genre) to it) }
+                add(stringResource(R.string.track_details_duration) to details.duration)
+                details.year?.let { add(stringResource(R.string.track_details_year) to it) }
+                details.trackNumber?.let { add(stringResource(R.string.track_details_track_number) to it) }
+                details.mimeType?.let { add(stringResource(R.string.track_details_format) to it) }
+                details.bitrate?.let { add(stringResource(R.string.track_details_bitrate) to it) }
+                details.samplingRate?.let { add(stringResource(R.string.track_details_sampling_rate) to it) }
+                details.fileSize?.let { add(stringResource(R.string.track_details_file_size) to it) }
+                details.filePath?.let { add(stringResource(R.string.track_details_file_path) to it) }
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                DetailItem(label = stringResource(R.string.track_details_title_label), value = details.title)
-                DetailItem(label = stringResource(R.string.track_details_artist), value = details.artist)
-                DetailItem(label = stringResource(R.string.track_details_album), value = details.album)
-                details.genre?.let { DetailItem(label = stringResource(R.string.track_details_genre), value = it) }
-                DetailItem(label = stringResource(R.string.track_details_duration), value = details.duration)
-                details.year?.let { DetailItem(label = stringResource(R.string.track_details_year), value = it) }
-                details.trackNumber?.let { DetailItem(label = stringResource(R.string.track_details_track_number), value = it) }
-                details.mimeType?.let { DetailItem(label = stringResource(R.string.track_details_format), value = it) }
-                details.bitrate?.let { DetailItem(label = stringResource(R.string.track_details_bitrate), value = it) }
-                details.samplingRate?.let { DetailItem(label = stringResource(R.string.track_details_sampling_rate), value = it) }
-                details.fileSize?.let { DetailItem(label = stringResource(R.string.track_details_file_size), value = it) }
-                details.filePath?.let { DetailItem(label = stringResource(R.string.track_details_file_path), value = it) }
+                items.forEachIndexed { index, (label, value) ->
+                    DetailItem(
+                        label = label,
+                        value = value,
+                        isFirst = index == 0,
+                        isLast = index == items.lastIndex
+                    )
+                }
             }
         },
         confirmButton = {
@@ -201,23 +214,33 @@ fun TrackDetailsDialog(
     )
 }
 
+/** Grouped-list row: tonal card, title on top, value below; big corners only on the first / last row. */
 @Composable
-private fun DetailItem(label: String, value: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
+private fun DetailItem(label: String, value: String, isFirst: Boolean, isLast: Boolean) {
+    val outer = 20.dp
+    val inner = 5.dp
+    Surface(
+        shape = RoundedCornerShape(
+            topStart = if (isFirst) outer else inner,
+            topEnd = if (isFirst) outer else inner,
+            bottomStart = if (isLast) outer else inner,
+            bottomEnd = if (isLast) outer else inner
+        ),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
