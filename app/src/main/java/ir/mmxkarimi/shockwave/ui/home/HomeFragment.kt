@@ -558,6 +558,11 @@ fun FavoritesPage(
     val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
     val player = remember { Screens.container(context).player }
 
+    // Id only: position ticks otherwise recompose the whole list every second.
+    val currentTrackId by remember(player) {
+        player.getState().map { it.currentTrack?.id }.distinctUntilChanged()
+    }.observeAsState()
+
     val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         if (result.resultCode == android.app.Activity.RESULT_OK) {
             val t = pendingStorageTrack
@@ -658,6 +663,7 @@ fun FavoritesPage(
                                 track = track,
                                 isFirst = index == 0,
                                 isLast = index == liked.lastIndex,
+                                isPlaying = track.id == currentTrackId,
                                 onClick = {
                                     libVm.play(liked, liked.indexOf(track), "Favorites")
                                 },

@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -15,6 +16,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.OptIn
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
@@ -37,8 +39,14 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.ui.player.PlayerFormat
+import ir.mmxkarimi.shockwave.data.settings.SettingsStore
 import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
+import ir.mmxkarimi.shockwave.ui.settings.ThemeApplier
 import ir.mmxkarimi.shockwave.ui.theme.AccentScheme
+import ir.mmxkarimi.shockwave.ui.theme.LimeBlackColorScheme
+import ir.mmxkarimi.shockwave.ui.theme.LimeDarkColorScheme
+import ir.mmxkarimi.shockwave.ui.theme.LimeLightColorScheme
+import ir.mmxkarimi.shockwave.ui.theme.ThemeMode
 import ir.mmxkarimi.shockwave.ui.theme.Tokens
 import java.util.Locale
 import java.util.Objects
@@ -216,7 +224,7 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
 
         // The shade shows this custom view everywhere (with the progress bar); collapsed and expanded are equal.
         val content = RemoteViews(context.getPackageName(), R.layout.notification_media)
-        fill(content, session, actionFactory, title, artist, position, duration, playing, art)
+        fill(content, session, actionFactory, title, artist, position, duration, playing, art, palette())
         builder.setCustomContentView(content)
         builder.setCustomBigContentView(content)
         if (Build.VERSION.SDK_INT >= 31) {
@@ -255,7 +263,22 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
         durationMs: Long,
         playing: Boolean,
         artwork: Bitmap?,
+        palette: Palette,
     ) {
+        // Explicit app colours: the shade's own theme can differ from the app's (dark text on a dark card).
+        views.setInt(R.id.np_root, "setBackgroundColor", palette.background)
+        views.setTextColor(R.id.np_title, palette.text)
+        views.setTextColor(R.id.np_artist, palette.textSecondary)
+        views.setTextColor(R.id.np_elapsed, palette.textSecondary)
+        views.setTextColor(R.id.np_duration, palette.textSecondary)
+        views.setInt(R.id.np_prev, "setColorFilter", palette.text)
+        views.setInt(R.id.np_next, "setColorFilter", palette.text)
+        views.setInt(R.id.np_play, "setColorFilter", palette.accent)
+        if (Build.VERSION.SDK_INT >= 31) {
+            views.setColorStateList(R.id.np_progress, "setProgressTintList", ColorStateList.valueOf(palette.accent))
+            views.setColorStateList(R.id.np_progress, "setProgressBackgroundTintList",
+                    ColorStateList.valueOf(palette.textSecondary and 0x00FFFFFF or 0x40000000))
+        }
         views.setTextViewText(R.id.np_title, title)
         views.setTextViewText(R.id.np_artist, artist)
         val locale = context.getResources().getConfiguration().getLocales().get(0)
@@ -269,9 +292,10 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
         } else {
             views.setViewVisibility(R.id.np_art, View.GONE)
         }
-        views.setImageViewResource(R.id.np_prev, R.drawable.notif_ic_prev)
-        views.setImageViewResource(R.id.np_play, if (playing) R.drawable.notif_ic_pause else R.drawable.notif_ic_play)
-        views.setImageViewResource(R.id.np_next, R.drawable.notif_ic_next)
+        // Untinted widget icons: a drawable-level tint would override the colour filter set above.
+        views.setImageViewResource(R.id.np_prev, R.drawable.widget_ic_prev)
+        views.setImageViewResource(R.id.np_play, if (playing) R.drawable.widget_ic_pause else R.drawable.widget_ic_play)
+        views.setImageViewResource(R.id.np_next, R.drawable.widget_ic_next)
         views.setOnClickPendingIntent(R.id.np_prev,
                 actionFactory.createMediaActionPendingIntent(session, Player.COMMAND_SEEK_TO_PREVIOUS))
         views.setOnClickPendingIntent(R.id.np_play,
@@ -280,19 +304,42 @@ class PlaybackNotificationProvider(context: Context) : MediaNotification.Provide
                 actionFactory.createMediaActionPendingIntent(session, Player.COMMAND_SEEK_TO_NEXT))
     }
 
-    private fun getAppColor(): Int {
-        val dark = Tokens.isDark(context)
-        val isDynamic = PrefsSettingsStore(context).isDynamicColor()
-        if (isDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val resId = if (dark) android.R.color.system_accent1_200 else android.R.color.system_accent1_600
+    /** Colours of the notification card, taken from the app theme (Material You when enabled, lime fallback). */
+    private class Palette(val background: Int, val text: Int, val textSecondary: Int, val accent: Int)
+
+    private fun palette(): Palette {
+        val settings = PrefsSettingsStore(context)
+        val mode = ThemeApplier.toMode(settings.getTheme())
+        val black = mode == ThemeMode.BLACK
+        val dark = when (mode) {
+            ThemeMode.LIGHT -> false
+            ThemeMode.DARK, ThemeMode.BLACK -> true
+            ThemeMode.SYSTEM -> Tokens.isDark(context)
+        }
+        if (settings.isDynamicColor() && !black && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             try {
-                return ContextCompat.getColor(context, resId)
+                fun c(id: Int) = ContextCompat.getColor(context, id)
+                return if (dark) {
+                    Palette(c(android.R.color.system_neutral1_900), c(android.R.color.system_neutral1_100),
+                            c(android.R.color.system_neutral2_200), c(android.R.color.system_accent1_200))
+                } else {
+                    Palette(c(android.R.color.system_neutral1_10), c(android.R.color.system_neutral1_900),
+                            c(android.R.color.system_neutral2_700), c(android.R.color.system_accent1_600))
+                }
             } catch (ignored: Exception) {
-                // fall through
+                // fall through to the app scheme
             }
         }
-        return AccentScheme.base(dark).primary
+        val scheme = when {
+            black -> LimeBlackColorScheme
+            dark -> LimeDarkColorScheme
+            else -> LimeLightColorScheme
+        }
+        return Palette(scheme.surface.toArgb(), scheme.onSurface.toArgb(),
+                scheme.onSurfaceVariant.toArgb(), scheme.primary.toArgb())
     }
+
+    private fun getAppColor(): Int = palette().accent
 
     private fun getString(resId: Int): String {
         return context.getString(resId)

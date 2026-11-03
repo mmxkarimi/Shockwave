@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Media notification body used as both the collapsed and the expanded content view: artwork, title/artist,
-     a progress bar with elapsed / total time and previous · play-pause · next controls. Colours come from the
-     framework theme, so the card stays readable in light and dark shades; PlaybackNotificationProvider fills
+     a progress bar with elapsed / total time and previous · play-pause · next controls. Colours are set at runtime
+     from the app palette (Material You or the lime fallback) so the card never depends on the shade's theme; PlaybackNotificationProvider fills
      every id below on each (1 Hz while playing) update. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/np_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="96dp"
@@ -92,7 +93,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:padding="12dp"
-                android:src="@drawable/notif_ic_prev"
+                android:src="@drawable/widget_ic_prev"
                 android:contentDescription="@string/mp_cd_previous" />
 
             <ImageView
@@ -100,7 +101,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:padding="12dp"
-                android:src="@drawable/notif_ic_play"
+                android:src="@drawable/widget_ic_play"
                 android:contentDescription="@string/mp_cd_play" />
 
             <ImageView
@@ -108,7 +109,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:padding="12dp"
-                android:src="@drawable/notif_ic_next"
+                android:src="@drawable/widget_ic_next"
                 android:contentDescription="@string/mp_cd_next" />
         </LinearLayout>
     </LinearLayout>
