@@ -1147,57 +1147,55 @@ fun TracksHeader(
     onShuffleClick: () -> Unit,
     onPlayAllClick: () -> Unit
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = formatTrackCount(itemCount),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (sortLabel != null && onSortClick != null) {
-                TextButton(onClick = onSortClick) {
-                    Text(sortLabel)
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-        }
+        Text(
+            text = formatTrackCount(itemCount),
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(modifier = Modifier.fillMaxWidth()) {
+        // Compact play / shuffle group, placed next to the sort menu.
+        val compactPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+        Row {
             Button(
                 onClick = onPlayAllClick,
                 shape = ConnectedButtonShapes.leading,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp)
+                contentPadding = compactPadding,
+                modifier = Modifier.height(36.dp)
             ) {
-                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Play")
+                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Play", style = MaterialTheme.typography.labelLarge)
             }
             FilledTonalButton(
                 onClick = onShuffleClick,
                 shape = ConnectedButtonShapes.trailing,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp)
+                contentPadding = compactPadding,
+                modifier = Modifier.height(36.dp)
             ) {
-                Icon(Icons.Default.Shuffle, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Shuffle")
+                Icon(Icons.Default.Shuffle, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Shuffle", style = MaterialTheme.typography.labelLarge)
+            }
+        }
+
+        if (sortLabel != null && onSortClick != null) {
+            Spacer(modifier = Modifier.width(4.dp))
+            TextButton(onClick = onSortClick) {
+                Text(sortLabel, maxLines = 1)
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
