@@ -1,0 +1,7 @@
+<resources>
+    <string name="widget_name">Shockwave player</string>
+    <string name="widget_description">Cover, title and playback controls. Resize it to switch between compact, wide and square layouts.</string>
+    <string name="widget_cd_open">Open Shockwave</string>
+    <string name="widget_idle_title">Nothing playing</string>
+    <string name="widget_idle_subtitle">Tap to open Shockwave</string>
+</resources>
