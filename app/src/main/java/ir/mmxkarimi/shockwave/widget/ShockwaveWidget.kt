@@ -1,6 +1,7 @@
 package ir.mmxkarimi.shockwave.widget
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.DpSize
@@ -45,7 +46,7 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import ir.mmxkarimi.shockwave.MainActivity
 import ir.mmxkarimi.shockwave.R
-import ir.mmxkarimi.shockwave.data.settings.SettingsStore
+import ir.mmxkarimi.shockwave.ui.settings.SettingsStore
 import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
 import ir.mmxkarimi.shockwave.ui.theme.LimeBlackColorScheme
 import ir.mmxkarimi.shockwave.ui.theme.LimeDarkColorScheme
@@ -84,7 +85,9 @@ object ShockwaveWidget : GlanceAppWidget() {
     }
 }
 
-private val OpenApp: Action get() = actionStartActivity<MainActivity>()
+@Composable
+private fun openApp(): Action =
+    actionStartActivity(Intent(LocalContext.current, MainActivity::class.java))
 
 @Composable
 private fun WidgetContent(s: WidgetSnapshot) {
@@ -106,7 +109,7 @@ private fun WidgetContent(s: WidgetSnapshot) {
 @Composable
 private fun CompactLayout(s: WidgetSnapshot, root: GlanceModifier) {
     Row(root.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Cover(s, GlanceModifier.size(44.dp).clickable(OpenApp), 44.dp)
+        Cover(s, GlanceModifier.size(44.dp).clickable(openApp()), 44.dp)
         Column(
             modifier = GlanceModifier.defaultWeight().padding(start = 12.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -122,7 +125,7 @@ private fun CompactLayout(s: WidgetSnapshot, root: GlanceModifier) {
 @Composable
 private fun WideLayout(s: WidgetSnapshot, root: GlanceModifier) {
     Row(root.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Cover(s, GlanceModifier.size(96.dp).clickable(OpenApp), 96.dp)
+        Cover(s, GlanceModifier.size(96.dp).clickable(openApp()), 96.dp)
         Column(modifier = GlanceModifier.defaultWeight().padding(start = 14.dp)) {
             TrackTexts(s, titleSp = 17, artistSp = 13)
             Spacer(GlanceModifier.height(10.dp))
@@ -150,7 +153,7 @@ private fun SquareLayout(s: WidgetSnapshot, root: GlanceModifier) {
     val surface = GlanceTheme.colors.surface.getColor(context)
     Box(root, contentAlignment = Alignment.BottomCenter) {
         Box(
-            modifier = GlanceModifier.fillMaxSize().padding(8.dp).clickable(OpenApp),
+            modifier = GlanceModifier.fillMaxSize().padding(8.dp).clickable(openApp()),
             contentAlignment = Alignment.Center
         ) {
             if (s.artwork != null) {
