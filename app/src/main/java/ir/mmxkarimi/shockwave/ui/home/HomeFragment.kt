@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -448,10 +449,12 @@ fun TracksPage(
                     }
                 }
 
-                items(sortedTracks, key = { it.id }) { track ->
+                itemsIndexed(sortedTracks, key = { _, t -> t.id }) { index, track ->
                     Box {
                         BorderlessTrackRow(
                             track = track,
+                            isFirst = index == 0,
+                            isLast = index == sortedTracks.lastIndex,
                             isPlaying = track.id == currentTrackId,
                             onClick = {
                                 libVm.play(sortedTracks, sortedTracks.indexOf(track), "All Tracks")
@@ -648,10 +651,12 @@ fun FavoritesPage(
                         )
                     }
 
-                    items(liked, key = { it.id }) { track ->
+                    itemsIndexed(liked, key = { _, t -> t.id }) { index, track ->
                         Box {
                             BorderlessTrackRow(
                                 track = track,
+                                isFirst = index == 0,
+                                isLast = index == liked.lastIndex,
                                 onClick = {
                                     libVm.play(liked, liked.indexOf(track), "Favorites")
                                 },
@@ -1207,20 +1212,38 @@ private object ConnectedButtonShapes {
 }
 
 /**
- * Flat track row: no card, no border, no divider. Just the content on the page surface.
+ * Track row styled as a grouped-list item: no border, small gaps between rows,
+ * large rounded corners only on the first and last row of the group.
  */
 @Composable
 fun BorderlessTrackRow(
     track: Track,
     onClick: () -> Unit,
     onMoreClick: () -> Unit,
-    isPlaying: Boolean = false
+    isPlaying: Boolean = false,
+    isFirst: Boolean = false,
+    isLast: Boolean = false
 ) {
+    val outer = 24.dp
+    val inner = 6.dp
+    val shape = RoundedCornerShape(
+        topStart = if (isFirst) outer else inner,
+        topEnd = if (isFirst) outer else inner,
+        bottomStart = if (isLast) outer else inner,
+        bottomEnd = if (isLast) outer else inner
+    )
+    Surface(
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 1.dp)
+    ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncArtworkImage(
@@ -1266,6 +1289,7 @@ fun BorderlessTrackRow(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
     }
 }
 
