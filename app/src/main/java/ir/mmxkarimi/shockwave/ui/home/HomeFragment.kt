@@ -1171,9 +1171,7 @@ fun TracksHeader(
                 contentPadding = compactPadding,
                 modifier = Modifier.height(36.dp)
             ) {
-                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Play", style = MaterialTheme.typography.labelLarge)
+                Icon(Icons.Default.PlayArrow, contentDescription = "Play", modifier = Modifier.size(20.dp))
             }
             FilledTonalButton(
                 onClick = onShuffleClick,
@@ -1181,9 +1179,7 @@ fun TracksHeader(
                 contentPadding = compactPadding,
                 modifier = Modifier.height(36.dp)
             ) {
-                Icon(Icons.Default.Shuffle, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Shuffle", style = MaterialTheme.typography.labelLarge)
+                Icon(Icons.Default.Shuffle, contentDescription = "Shuffle", modifier = Modifier.size(20.dp))
             }
         }
 
