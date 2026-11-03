@@ -461,10 +461,9 @@ fun TracksPage(
                             },
                             onMoreClick = {
                                 trackActionTarget = track
-                            }
-                        )
-
-                        if (trackActionTarget == track) {
+                            },
+ menuContent = {
+if (trackActionTarget == track) {
                             DropdownMenu(
                                 expanded = true,
                                 onDismissRequest = { trackActionTarget = null }
@@ -519,6 +518,8 @@ fun TracksPage(
                                 )
                             }
                         }
+}
+                        )
                     }
                 }
             }
@@ -556,6 +557,11 @@ fun FavoritesPage(
     val context = LocalContext.current
     val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
     val player = remember { Screens.container(context).player }
+
+    // Id only: position ticks otherwise recompose the whole list every second.
+    val currentTrackId by remember(player) {
+        player.getState().map { it.currentTrack?.id }.distinctUntilChanged()
+    }.observeAsState()
 
     val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         if (result.resultCode == android.app.Activity.RESULT_OK) {
@@ -657,15 +663,15 @@ fun FavoritesPage(
                                 track = track,
                                 isFirst = index == 0,
                                 isLast = index == liked.lastIndex,
+                                isPlaying = track.id == currentTrackId,
                                 onClick = {
                                     libVm.play(liked, liked.indexOf(track), "Favorites")
                                 },
                                 onMoreClick = {
                                     trackActionTarget = track
-                                }
-                            )
-
-                            if (trackActionTarget == track) {
+                                },
+ menuContent = {
+if (trackActionTarget == track) {
                                 DropdownMenu(
                                     expanded = true,
                                     onDismissRequest = { trackActionTarget = null }
@@ -720,6 +726,8 @@ fun FavoritesPage(
                                     )
                                 }
                             }
+}
+                            )
                         }
                     }
                 }
@@ -1214,6 +1222,7 @@ fun BorderlessTrackRow(
     track: Track,
     onClick: () -> Unit,
     onMoreClick: () -> Unit,
+    menuContent: @Composable () -> Unit = {},
     isPlaying: Boolean = false,
     isFirst: Boolean = false,
     isLast: Boolean = false
@@ -1276,12 +1285,16 @@ fun BorderlessTrackRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        IconButton(onClick = onMoreClick) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "More",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        // The menu lives in the same Box as the button so it opens anchored to the three dots.
+        Box {
+            IconButton(onClick = onMoreClick) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "More",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            menuContent()
         }
     }
     }

@@ -1,0 +1,7 @@
+<resources>
+    <string name="widget_name">پخش‌کننده شاک‌ویو</string>
+    <string name="widget_description">جلد، عنوان و کنترل‌های پخش. با تغییر اندازه، بین چیدمان فشرده، عریض و مربعی جابه‌جا می‌شود.</string>
+    <string name="widget_cd_open">باز کردن شاک‌ویو</string>
+    <string name="widget_idle_title">چیزی در حال پخش نیست</string>
+    <string name="widget_idle_subtitle">برای باز کردن شاک‌ویو بزنید</string>
+</resources>
