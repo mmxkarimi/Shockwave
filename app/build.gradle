@@ -96,6 +96,11 @@ dependencies {
     implementation libs.compose.runtime.livedata
     debugImplementation libs.compose.ui.tooling
 
+    // Jetpack Glance (app widgets)
+    implementation libs.glance
+    implementation libs.glance.appwidget
+    implementation libs.glance.material3
+
     implementation libs.media3.exoplayer
     implementation libs.media3.session
 }
