@@ -461,10 +461,9 @@ fun TracksPage(
                             },
                             onMoreClick = {
                                 trackActionTarget = track
-                            }
-                        )
-
-                        if (trackActionTarget == track) {
+                            },
+ menuContent = {
+if (trackActionTarget == track) {
                             DropdownMenu(
                                 expanded = true,
                                 onDismissRequest = { trackActionTarget = null }
@@ -519,6 +518,8 @@ fun TracksPage(
                                 )
                             }
                         }
+}
+                        )
                     }
                 }
             }
@@ -662,10 +663,9 @@ fun FavoritesPage(
                                 },
                                 onMoreClick = {
                                     trackActionTarget = track
-                                }
-                            )
-
-                            if (trackActionTarget == track) {
+                                },
+ menuContent = {
+if (trackActionTarget == track) {
                                 DropdownMenu(
                                     expanded = true,
                                     onDismissRequest = { trackActionTarget = null }
@@ -720,6 +720,8 @@ fun FavoritesPage(
                                     )
                                 }
                             }
+}
+                            )
                         }
                     }
                 }
@@ -1214,6 +1216,7 @@ fun BorderlessTrackRow(
     track: Track,
     onClick: () -> Unit,
     onMoreClick: () -> Unit,
+    menuContent: @Composable () -> Unit = {},
     isPlaying: Boolean = false,
     isFirst: Boolean = false,
     isLast: Boolean = false
@@ -1276,12 +1279,16 @@ fun BorderlessTrackRow(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        IconButton(onClick = onMoreClick) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "More",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        // The menu lives in the same Box as the button so it opens anchored to the three dots.
+        Box {
+            IconButton(onClick = onMoreClick) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "More",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            menuContent()
         }
     }
     }
