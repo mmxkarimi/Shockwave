@@ -159,6 +159,7 @@ import ir.mmxkarimi.shockwave.ui.theme.Tokens
 import ir.mmxkarimi.shockwave.ui.widget.ArtworkView
 import ir.mmxkarimi.shockwave.ui.widget.MorphPlayPauseView
 import ir.mmxkarimi.shockwave.ui.widget.WaveMath
+import java.text.Bidi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -1004,6 +1005,16 @@ private fun WavySeekBar(
 // Lyrics
 // ------------------------------------------------------------------------------------------------
 
+/**
+ * Base direction of a lyric line, as the Unicode bidi algorithm picks it (first strong character, UAX #9 P2/P3):
+ * digits, quotes, brackets and symbols at the start do not decide it. True for right-to-left; blank or neutral-only
+ * text is left-to-right.
+ */
+private fun isRtlParagraph(text: String): Boolean {
+    if (text.isBlank()) return false
+    return !Bidi(text, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT).baseIsLeftToRight()
+}
+
 @Composable
 private fun LyricsStage(
     lyrics: Lyrics?,
@@ -1130,19 +1141,18 @@ private fun LyricsStage(
                 itemsIndexed(lines) { index, line ->
                     val isActive = index == activeLine
                     val lineText = line.text
-                    val isRtl = lineText.firstOrNull { !it.isWhitespace() }?.let {
-                        Character.getDirectionality(it) == Character.DIRECTIONALITY_RIGHT_TO_LEFT ||
-                        Character.getDirectionality(it) == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
-                    } == true
+                    val rtl = remember(lineText) { isRtlParagraph(lineText) }
                     Text(
                         text = lineText,
                         style = TextStyle(
                             fontSize = if (isActive) 22.sp else 16.sp,
                             fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-                            textDirection = TextDirection.Content
+                            textDirection = if (rtl) TextDirection.Rtl else TextDirection.Ltr
                         ),
                         color = if (isActive) colors.accent else colors.text.copy(alpha = 0.55f),
-                        textAlign = if (isRtl) TextAlign.End else TextAlign.Start,
+                        // Absolute edges: an RTL line is right-aligned and an LTR line left-aligned, independent of the
+                        // UI's layout direction.
+                        textAlign = if (rtl) TextAlign.Right else TextAlign.Left,
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {

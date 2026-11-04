@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home-screen widget surface: rounded rectangle, white so Glance can tint it. Corners are drawn here (not with
+     cornerRadius) so they look the same on every Android version. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFFFFFFF" />
+    <corners android:radius="28dp" />
+</shape>

@@ -143,6 +143,7 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                 val accent by ThemeController.get(this@MainActivity).accent().observeAsState()
                 val settings = remember { (application as ShockwaveApp).getContainer().settings() }
                 val artworkColors by settings.artworkColors().observeAsState(true)
+                val dynamicColor by settings.dynamicColor().observeAsState(true)
                 val theme = remember { PrefsSettingsStore(this@MainActivity).getTheme() }
                 val currentMode = ThemeApplier.toMode(theme)
 
@@ -154,7 +155,12 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                     0f
                 }
 
-                val effectiveAccent = if (artworkColors) accent else null
+                // Material You owns the chrome (mini player included) whenever it is active; the artwork accent
+                // only replaces the scheme when it is not, otherwise it would override the dynamic primary.
+                val materialYou = dynamicColor &&
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                        currentMode != ThemeMode.BLACK
+                val effectiveAccent = if (artworkColors && !materialYou) accent else null
                 ShockwaveTheme(mode = currentMode, accentScheme = effectiveAccent) {
                     Box(
                         modifier = Modifier
