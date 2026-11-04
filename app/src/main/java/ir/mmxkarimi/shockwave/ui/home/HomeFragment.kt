@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -409,7 +408,6 @@ fun TracksPage(
                 item {
                     Box {
                         TracksHeader(
-                            itemCount = sortedTracks.size,
                             sortLabel = sortLabel,
                             onSortClick = { sortMenuOpen = true },
                             onShuffleClick = {
@@ -645,7 +643,6 @@ fun FavoritesPage(
                 ) {
                     item {
                         TracksHeader(
-                            itemCount = liked.size,
                             sortLabel = null,
                             onSortClick = null,
                             onShuffleClick = {
@@ -765,6 +762,12 @@ fun PlaylistsPage(
     val context = LocalContext.current
     val library = remember { Screens.container(context).library }
     val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
+    val player = remember { Screens.container(context).player }
+
+    // "Playing from" label of the queue; a playlist's tracks are played with its name as the label.
+    val playingFrom by remember(player) {
+        player.getState().map { if (it.currentTrack != null) it.playingFrom else null }.distinctUntilChanged()
+    }.observeAsState()
 
     if (playlistToDelete != null) {
         AlertDialog(
@@ -843,14 +846,8 @@ fun PlaylistsPage(
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.Start
                     ) {
-                        Text(
-                            text = "${playlists.size} Playlists",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
                         Surface(
                             onClick = { showCreateDialog = true },
                             shape = RoundedCornerShape(12.dp),
@@ -878,68 +875,17 @@ fun PlaylistsPage(
                     }
                 }
 
-                items(playlists, key = { it.id }) { playlist ->
-                    Surface(
+                itemsIndexed(playlists, key = { _, p -> p.id }) { index, playlist ->
+                    PlaylistRow(
+                        playlist = playlist,
+                        isFirst = index == 0,
+                        isLast = index == playlists.lastIndex,
+                        isPlaying = playlist.name == playingFrom,
                         onClick = {
                             onNavigateTrackList(ScreenNavigator.TrackList.PLAYLIST, playlist.id)
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 6.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainer,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                modifier = Modifier.size(52.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.PlaylistPlay,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.width(16.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = playlist.name,
-                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = formatTrackCount(playlist.trackCount),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            IconButton(
-                                onClick = { playlistToDelete = playlist },
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.DeleteOutline,
-                                    contentDescription = "Delete playlist",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    }
+                        onDeleteClick = { playlistToDelete = playlist }
+                    )
                 }
             }
 
@@ -958,6 +904,83 @@ fun PlaylistsPage(
                         )
                     )
             )
+        }
+    }
+}
+
+/**
+ * Playlist as a grouped-list row, the same shape and spacing as [BorderlessTrackRow]: cover, name and track count.
+ * The playing playlist gets the primary-container fill instead of the plain container.
+ */
+@Composable
+private fun PlaylistRow(
+    playlist: Playlist,
+    isFirst: Boolean,
+    isLast: Boolean,
+    isPlaying: Boolean,
+    onClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    val outer = 24.dp
+    val inner = 6.dp
+    val shape = RoundedCornerShape(
+        topStart = if (isFirst) outer else inner,
+        topEnd = if (isFirst) outer else inner,
+        bottomStart = if (isLast) outer else inner,
+        bottomEnd = if (isLast) outer else inner
+    )
+    val titleColor = if (isPlaying) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+    val secondaryColor = if (isPlaying) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+
+    Surface(
+        shape = shape,
+        color = if (isPlaying) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncArtworkImage(
+                artworkUri = playlist.artworkUris.firstOrNull(),
+                seed = playlist.placeholderSeed,
+                modifier = Modifier.size(56.dp),
+                cornerDp = 16.dp
+            )
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = playlist.name,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = if (isPlaying) FontWeight.ExtraBold else FontWeight.SemiBold
+                    ),
+                    color = titleColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = formatTrackCount(playlist.trackCount),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = secondaryColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = Icons.Default.DeleteOutline,
+                    contentDescription = "Delete playlist",
+                    tint = secondaryColor
+                )
+            }
         }
     }
 }
@@ -989,8 +1012,7 @@ fun AlbumsPage(
                         },
                         modifier = Modifier.clip(RoundedCornerShape(16.dp)),
                         shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainer,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                        color = MaterialTheme.colorScheme.surfaceContainer
                     ) {
                         Column(
                             modifier = Modifier.padding(10.dp),
@@ -1076,8 +1098,7 @@ fun ArtistsPage(
                         },
                         modifier = Modifier.clip(RoundedCornerShape(16.dp)),
                         shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainer,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                        color = MaterialTheme.colorScheme.surfaceContainer
                     ) {
                         Column(
                             modifier = Modifier.padding(10.dp),
@@ -1149,7 +1170,6 @@ private fun formatTrackCount(count: Int): String {
  */
 @Composable
 fun TracksHeader(
-    itemCount: Int,
     sortLabel: String?,
     onSortClick: (() -> Unit)?,
     onShuffleClick: () -> Unit,
@@ -1161,16 +1181,7 @@ fun TracksHeader(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = formatTrackCount(itemCount),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-
-        // Compact play / shuffle group, placed next to the sort menu.
+        // Play / shuffle group at the leading edge (where the track count used to be).
         val compactPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
         Row {
             Button(
@@ -1192,7 +1203,8 @@ fun TracksHeader(
         }
 
         if (sortLabel != null && onSortClick != null) {
-            Spacer(modifier = Modifier.width(4.dp))
+            // Pushes the sort menu to the trailing edge.
+            Spacer(modifier = Modifier.weight(1f))
             TextButton(onClick = onSortClick) {
                 Text(sortLabel, maxLines = 1)
                 Icon(

@@ -12,7 +12,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import ir.mmxkarimi.shockwave.widget.ShockwaveWidgetUpdater
 
 /**
  * Hosts the MediaSession on the process-wide [PlayerHolder] player: media notification, lock screen,
@@ -31,16 +30,6 @@ class PlaybackService : MediaSessionService() {
 
     private val serviceWatcher: Player.Listener = object : Player.Listener {
         override fun onEvents(p: Player, events: Player.Events) {
-            if (events.containsAny(
-                    Player.EVENT_MEDIA_ITEM_TRANSITION,
-                    Player.EVENT_MEDIA_METADATA_CHANGED,
-                    Player.EVENT_IS_PLAYING_CHANGED,
-                    Player.EVENT_PLAYBACK_STATE_CHANGED,
-                    Player.EVENT_POSITION_DISCONTINUITY
-                )
-            ) {
-                ShockwaveWidgetUpdater.request(this@PlaybackService) // home-screen widget
-            }
             handler.removeCallbacks(idleStopTask)
             if (!isActive()) {
                 handler.postDelayed(idleStopTask, IDLE_STOP_DELAY_MS)

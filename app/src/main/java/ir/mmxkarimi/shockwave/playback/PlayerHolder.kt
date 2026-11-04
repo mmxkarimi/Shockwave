@@ -14,6 +14,7 @@ import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.extractor.DefaultExtractorsFactory
+import ir.mmxkarimi.shockwave.widget.ShockwaveWidgetSync
 
 /**
  * The one ExoPlayer of the process, shared by [ExoPlayerController] (UI side) and [PlaybackService]
@@ -60,6 +61,8 @@ internal class PlayerHolder private constructor() {
                 val newStore = PlaybackStore(app)
                 store = newStore
                 newStore.restoreAndAttach(p)
+                // Home-screen widget follows the player itself, not whichever component happens to be running.
+                p.addListener(ShockwaveWidgetSync(app))
                 player = p
             }
             return p

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.updateAll
+import androidx.media3.common.Player
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -13,7 +14,29 @@ class ShockwaveWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = ShockwaveWidget
 }
 
-/** Lets the playback service refresh every placed widget when the track or play state changes. */
+/**
+ * Attached to the process-wide player (see PlayerHolder), so every placed widget is refreshed on any change of the
+ * player: from the app, the notification, a media button, or the widget itself. The player is the single source of
+ * truth; the widget never has its own copy of the state.
+ */
+class ShockwaveWidgetSync(private val context: Context) : Player.Listener {
+    override fun onEvents(player: Player, events: Player.Events) {
+        if (events.containsAny(
+                Player.EVENT_MEDIA_ITEM_TRANSITION,
+                Player.EVENT_MEDIA_METADATA_CHANGED,
+                Player.EVENT_TIMELINE_CHANGED,
+                Player.EVENT_PLAY_WHEN_READY_CHANGED,
+                Player.EVENT_IS_PLAYING_CHANGED,
+                Player.EVENT_PLAYBACK_STATE_CHANGED,
+                Player.EVENT_POSITION_DISCONTINUITY
+            )
+        ) {
+            ShockwaveWidgetUpdater.request(context)
+        }
+    }
+}
+
+/** Refreshes every placed widget. */
 object ShockwaveWidgetUpdater {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 

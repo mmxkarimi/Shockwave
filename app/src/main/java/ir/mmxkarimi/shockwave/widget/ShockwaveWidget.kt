@@ -2,10 +2,14 @@ package ir.mmxkarimi.shockwave.widget
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.os.Build
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
@@ -19,14 +23,10 @@ import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.LinearProgressIndicator
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
-import androidx.glance.appwidget.appWidgetBackground
-import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
-import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -58,6 +58,11 @@ import ir.mmxkarimi.shockwave.ui.theme.LimeLightColorScheme
  *  - wide (about 4x2): big cover, title, artist, progress bar and controls;
  *  - square (about 2x2): the cover fills the widget with a translucent control pill on its bottom edge.
  * Colours follow the app: Material You when enabled (Android 12+), the app's lime scheme otherwise.
+ *
+ * Shapes (surface, buttons, pill, placeholder) are tinted drawables from res/drawable/widget_shape_*.xml. Rounded
+ * corners are not made with Glance's cornerRadius or appWidgetBackground: cornerRadius is only applied on Android 12+
+ * (controls were square on Android 10), and mixing the system widget background with a colour is the likely source of
+ * the corners changing between renders on 12.
  */
 object ShockwaveWidget : GlanceAppWidget() {
     private val COMPACT = DpSize(180.dp, 48.dp)
@@ -85,6 +90,10 @@ object ShockwaveWidget : GlanceAppWidget() {
     }
 }
 
+/** Progress bitmap size in pixels; the image is stretched to the bar's width and height. */
+private const val PROGRESS_PX_W = 240
+private const val PROGRESS_PX_H = 8
+
 @Composable
 private fun openApp(): Action =
     actionStartActivity(Intent(LocalContext.current, MainActivity::class.java))
@@ -92,23 +101,28 @@ private fun openApp(): Action =
 @Composable
 private fun WidgetContent(s: WidgetSnapshot) {
     val size = LocalSize.current
-    val root = GlanceModifier
-        .fillMaxSize()
-        .appWidgetBackground()
-        .background(GlanceTheme.colors.surface)
-        .cornerRadius(28.dp)
-    when {
-        size.height >= 100.dp && size.width >= 250.dp -> WideLayout(s, root)
-        size.height >= 100.dp -> SquareLayout(s, root)
-        else -> CompactLayout(s, root)
+    Box(modifier = GlanceModifier.fillMaxSize()) {
+        // Widget surface: a tinted rounded rectangle that fills the whole widget.
+        Image(
+            provider = ImageProvider(R.drawable.widget_shape_surface),
+            contentDescription = null,
+            modifier = GlanceModifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds,
+            colorFilter = ColorFilter.tint(GlanceTheme.colors.surface)
+        )
+        when {
+            size.height >= 100.dp && size.width >= 250.dp -> WideLayout(s)
+            size.height >= 100.dp -> SquareLayout(s)
+            else -> CompactLayout(s)
+        }
     }
 }
 
 // ---------------------------------------------------------------- layouts
 
 @Composable
-private fun CompactLayout(s: WidgetSnapshot, root: GlanceModifier) {
-    Row(root.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun CompactLayout(s: WidgetSnapshot) {
+    Row(GlanceModifier.fillMaxSize().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
         Cover(s, GlanceModifier.size(44.dp).clickable(openApp()), 44.dp)
         Column(
             modifier = GlanceModifier.defaultWeight().padding(start = 12.dp),
@@ -123,17 +137,24 @@ private fun CompactLayout(s: WidgetSnapshot, root: GlanceModifier) {
 }
 
 @Composable
-private fun WideLayout(s: WidgetSnapshot, root: GlanceModifier) {
-    Row(root.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun WideLayout(s: WidgetSnapshot) {
+    val context = LocalContext.current
+    Row(GlanceModifier.fillMaxSize().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
         Cover(s, GlanceModifier.size(96.dp).clickable(openApp()), 96.dp)
         Column(modifier = GlanceModifier.defaultWeight().padding(start = 14.dp)) {
             TrackTexts(s, titleSp = 17, artistSp = 13)
             Spacer(GlanceModifier.height(10.dp))
-            LinearProgressIndicator(
-                progress = s.progress.coerceIn(0f, 1f),
-                modifier = GlanceModifier.fillMaxWidth(),
-                color = GlanceTheme.colors.primary,
-                backgroundColor = GlanceTheme.colors.surfaceVariant
+            Image(
+                provider = ImageProvider(
+                    progressBar(
+                        progress = s.progress.coerceIn(0f, 1f),
+                        track = GlanceTheme.colors.surfaceVariant.getColor(context).toArgb(),
+                        fill = GlanceTheme.colors.primary.getColor(context).toArgb()
+                    )
+                ),
+                contentDescription = null,
+                modifier = GlanceModifier.fillMaxWidth().height(4.dp),
+                contentScale = ContentScale.FillBounds
             )
             Spacer(GlanceModifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -148,10 +169,10 @@ private fun WideLayout(s: WidgetSnapshot, root: GlanceModifier) {
 }
 
 @Composable
-private fun SquareLayout(s: WidgetSnapshot, root: GlanceModifier) {
+private fun SquareLayout(s: WidgetSnapshot) {
     val context = LocalContext.current
     val surface = GlanceTheme.colors.surface.getColor(context)
-    Box(root, contentAlignment = Alignment.BottomCenter) {
+    Box(GlanceModifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
         Box(
             modifier = GlanceModifier.fillMaxSize().padding(8.dp).clickable(openApp()),
             contentAlignment = Alignment.Center
@@ -164,15 +185,7 @@ private fun SquareLayout(s: WidgetSnapshot, root: GlanceModifier) {
                     contentScale = ContentScale.Fit
                 )
             } else {
-                Box(
-                    modifier = GlanceModifier
-                        .fillMaxSize()
-                        .background(GlanceTheme.colors.primaryContainer)
-                        .cornerRadius(22.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    NoteIcon(44.dp)
-                }
+                NotePlaceholder(44.dp)
             }
         }
         // Translucent pill on the cover's bottom edge.
@@ -180,18 +193,26 @@ private fun SquareLayout(s: WidgetSnapshot, root: GlanceModifier) {
             modifier = GlanceModifier.fillMaxSize().padding(bottom = 14.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
-            Row(
-                modifier = GlanceModifier
-                    .width(124.dp)
-                    .height(52.dp)
-                    .background(ColorProvider(surface.copy(alpha = 0.85f)))
-                    .cornerRadius(26.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = GlanceModifier.width(124.dp).height(52.dp),
+                contentAlignment = Alignment.Center
             ) {
-                SkipButton(R.drawable.widget_ic_prev, R.string.mp_cd_previous, 36.dp, actionRunCallback<PreviousAction>())
-                PlayButton(s.playing, 44.dp)
-                SkipButton(R.drawable.widget_ic_next, R.string.mp_cd_next, 36.dp, actionRunCallback<NextAction>())
+                Image(
+                    provider = ImageProvider(R.drawable.widget_shape_pill),
+                    contentDescription = null,
+                    modifier = GlanceModifier.fillMaxSize(),
+                    contentScale = ContentScale.FillBounds,
+                    colorFilter = ColorFilter.tint(ColorProvider(surface.copy(alpha = 0.85f)))
+                )
+                Row(
+                    modifier = GlanceModifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    SkipButton(R.drawable.widget_ic_prev, R.string.mp_cd_previous, 36.dp, actionRunCallback<PreviousAction>())
+                    PlayButton(s.playing, 44.dp)
+                    SkipButton(R.drawable.widget_ic_next, R.string.mp_cd_next, 36.dp, actionRunCallback<NextAction>())
+                }
             }
         }
     }
@@ -232,16 +253,23 @@ private fun Cover(s: WidgetSnapshot, modifier: GlanceModifier, size: Dp) {
                 contentScale = ContentScale.Fit
             )
         } else {
-            Box(
-                modifier = GlanceModifier
-                    .fillMaxSize()
-                    .background(GlanceTheme.colors.primaryContainer)
-                    .cornerRadius(size * 0.22f),
-                contentAlignment = Alignment.Center
-            ) {
-                NoteIcon(size * 0.45f)
-            }
+            NotePlaceholder(size * 0.45f)
         }
+    }
+}
+
+/** Tonal rounded tile with the note glyph; fills the box it is placed in. */
+@Composable
+private fun NotePlaceholder(iconSize: Dp) {
+    Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Image(
+            provider = ImageProvider(R.drawable.widget_shape_cover),
+            contentDescription = null,
+            modifier = GlanceModifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds,
+            colorFilter = ColorFilter.tint(GlanceTheme.colors.primaryContainer)
+        )
+        NoteIcon(iconSize)
     }
 }
 
@@ -271,11 +299,17 @@ private fun PlayButton(playing: Boolean, size: Dp) {
     Box(
         modifier = GlanceModifier
             .size(size)
-            .background(GlanceTheme.colors.primary)
-            .cornerRadius(size / 2)
             .clickable(actionRunCallback<PlayPauseAction>()),
         contentAlignment = Alignment.Center
     ) {
+        // Round button: a tinted oval, so it is round on every Android version.
+        Image(
+            provider = ImageProvider(R.drawable.widget_shape_oval),
+            contentDescription = null,
+            modifier = GlanceModifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds,
+            colorFilter = ColorFilter.tint(GlanceTheme.colors.primary)
+        )
         Image(
             provider = ImageProvider(if (playing) R.drawable.widget_ic_pause else R.drawable.widget_ic_play),
             contentDescription = context.getString(if (playing) R.string.mp_cd_pause else R.string.mp_cd_play),
@@ -283,4 +317,19 @@ private fun PlayButton(playing: Boolean, size: Dp) {
             colorFilter = ColorFilter.tint(GlanceTheme.colors.onPrimary)
         )
     }
+}
+
+/**
+ * Playback progress as a small bitmap: [track] with the played part in [fill]. Drawn by us because the platform
+ * progress bar takes its tint from the system accent (the purple) whenever it cannot be recoloured.
+ */
+private fun progressBar(progress: Float, track: Int, fill: Int): Bitmap {
+    val out = Bitmap.createBitmap(PROGRESS_PX_W, PROGRESS_PX_H, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(out)
+    val paint = Paint()
+    paint.color = track
+    canvas.drawRect(0f, 0f, PROGRESS_PX_W.toFloat(), PROGRESS_PX_H.toFloat(), paint)
+    paint.color = fill
+    canvas.drawRect(0f, 0f, PROGRESS_PX_W * progress.coerceIn(0f, 1f), PROGRESS_PX_H.toFloat(), paint)
+    return out
 }
