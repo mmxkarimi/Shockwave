@@ -17,7 +17,8 @@ import ir.mmxkarimi.shockwave.data.db.contract.WaveformsContract
  * Bump [VERSION] and add a migration step in [onUpgrade] whenever a contract changes.
  *
  * History: v1 = likes only (scaffold), v2 = library, playlists, play stats, waveform + lyrics caches,
- * v3 = lyrics cache keyed by expiry instead of fetch time.
+ * v3 = lyrics cache keyed by expiry instead of fetch time,
+ * v4 = track artwork points at the track's own file (its embedded cover), not at the MediaStore album thumbnail.
  */
 class DbHelper(context: Context) : SQLiteOpenHelper(context.applicationContext, NAME, null, VERSION) {
     override fun onConfigure(db: SQLiteDatabase) {
@@ -35,6 +36,13 @@ class DbHelper(context: Context) : SQLiteOpenHelper(context.applicationContext, 
             db.execSQL(LyricsCacheContract.DROP)
             for (sql in LyricsCacheContract.SCHEMA) db.execSQL(sql)
         }
+        if (oldVersion in 2..3) {
+            // Same rule as ScannedAudio.toTrack: every scanned track's cover is read from its own file.
+            db.execSQL(
+                "UPDATE " + TracksContract.TABLE + " SET " + TracksContract.COL_ARTWORK_URI + " = " +
+                    TracksContract.COL_MEDIA_URI + " WHERE " + TracksContract.COL_MEDIA_URI + " LIKE 'content://media/%'"
+            )
+        }
     }
 
     /** Playlists must exist before playlist_tracks (foreign key). */
@@ -50,6 +58,6 @@ class DbHelper(context: Context) : SQLiteOpenHelper(context.applicationContext, 
 
     companion object {
         const val NAME = "shockwave.db"
-        const val VERSION = 3
+        const val VERSION = 4
     }
 }

@@ -81,6 +81,7 @@ import ir.mmxkarimi.shockwave.BuildConfig
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.domain.model.Lyrics
 import ir.mmxkarimi.shockwave.domain.model.SleepTimer
+import ir.mmxkarimi.shockwave.domain.model.Track
 import ir.mmxkarimi.shockwave.ui.components.ExpressiveGroupCard
 import ir.mmxkarimi.shockwave.ui.components.ExpressiveGroupItemRow
 import ir.mmxkarimi.shockwave.ui.nav.ScreenNavigator
@@ -376,21 +377,41 @@ fun SettingsScreen(
                         title = stringResource(R.string.settings_download_all_lyrics),
                         subtitle = stringResource(R.string.settings_download_all_lyrics_sub),
                         onClick = {
-                            val tracks = container.library.getAllTracks().value ?: emptyList()
-                            if (tracks.isEmpty()) {
-                                Toast.makeText(context, context.getString(R.string.downloading_lyrics_no_tracks), Toast.LENGTH_SHORT).show()
+                            if (!s.onlineLyrics) {
+                                // Every track would just be answered from the cache: nothing new can be found.
+                                Toast.makeText(context, context.getString(R.string.downloading_lyrics_offline), Toast.LENGTH_LONG).show()
                                 return@ExpressiveGroupItemRow
                             }
-                            showDownloadLyricsDialog = true
-                            downloadProgress = 0
-                            downloadTotal = tracks.size
+                            downloadJob?.cancel()
                             downloadJob = coroutineScope.launch {
+                                // The list may not have been loaded yet when nothing on screen observes it.
+                                val allTracks = container.library.getAllTracks()
+                                val tracks = allTracks.value ?: withContext(Dispatchers.Main) {
+                                    suspendCancellableCoroutine<List<Track>> { cont ->
+                                        val observer = object : Observer<List<Track>> {
+                                            override fun onChanged(value: List<Track>) {
+                                                allTracks.removeObserver(this)
+                                                if (cont.isActive) cont.resume(value)
+                                            }
+                                        }
+                                        allTracks.observeForever(observer)
+                                        cont.invokeOnCancellation { allTracks.removeObserver(observer) }
+                                    }
+                                }
+                                if (tracks.isEmpty()) {
+                                    Toast.makeText(context, context.getString(R.string.downloading_lyrics_no_tracks), Toast.LENGTH_SHORT).show()
+                                    return@launch
+                                }
+                                showDownloadLyricsDialog = true
+                                downloadProgress = 0
+                                downloadTotal = tracks.size
                                 var downloaded = 0
                                 var notFound = 0
                                 for ((index, track) in tracks.withIndex()) {
                                     if (!isActive) break
                                     downloadProgress = index + 1
-                                    val liveData = container.lyrics.lyricsFor(track)
+                                    // refresh: tracks cached as "not found" are looked up again too.
+                                    val liveData = container.lyrics.refresh(track)
                                     val result = withContext(Dispatchers.Main) {
                                         suspendCancellableCoroutine<Lyrics> { cont ->
                                             val observer = object : Observer<Lyrics> {

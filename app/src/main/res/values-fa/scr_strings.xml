@@ -108,7 +108,9 @@
     <string name="settings_equalizer_not_found">هیچ برنامه اکولایزری در این دستگاه یافت نشد</string>
     <string name="library_menu_delete_track">حذف آهنگ</string>
     <string name="library_delete_track_title">حذف آهنگ؟</string>
-    <string name="library_delete_track_message">آیا از حذف این آهنگ از کتابخانه مطمئن هستید؟</string>
+    <string name="library_delete_track_message">فایل صوتی برای همیشه از دستگاه شما حذف می‌شود.</string>
+    <string name="delete_track_failed">حذف فایل ممکن نشد. آهنگ حفظ شد.</string>
+    <string name="delete_track_permission_denied">برای حذف فایل‌ها، اجازهٔ دسترسی به حافظه لازم است.</string>
     <string name="library_delete_playlist_title">حذف فهرست پخش؟</string>
     <string name="library_delete_playlist_message">آیا از حذف «%1$s» مطمئن هستید؟</string>
     <string name="action_delete">حذف</string>
@@ -166,4 +168,7 @@
     <string name="downloading_lyrics_progress">%1$s از %2$s</string>
     <string name="downloading_lyrics_complete">متن %1$d آهنگ دانلود شد (%2$d از قبل ذخیره شده، %3$d پیدا نشد)</string>
     <string name="downloading_lyrics_no_tracks">هیچ آهنگی در کتابخانه یافت نشد</string>
+    <string name="downloading_lyrics_offline">برای دریافت متن آهنگ‌ها، متن آنلاین را روشن کنید.</string>
+    <string name="playing_from_file">فایل‌ها</string>
+    <string name="external_open_failed">باز کردن این فایل صوتی ممکن نشد.</string>
 </resources>

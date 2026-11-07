@@ -5,6 +5,7 @@ import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -72,15 +73,47 @@ internal class ArtworkLoader(context: Context) : BitmapLoader {
                 } catch (ignored: Exception) {
                 }
             }
+            if (ir.mmxkarimi.shockwave.ui.widget.ArtworkLoader.isAudioItem(uri.toString())) {
+                // A track's own audio file: its embedded picture, never a decode of the audio stream.
+                val bytes = embeddedPicture(uri) ?: throw IOException("No embedded artwork: $uri")
+                val bounds = BitmapFactory.Options()
+                bounds.inJustDecodeBounds = true
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                return@Callable BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOptions(bounds))
+                    ?: throw IOException("Undecodable artwork: $uri")
+            }
             val bounds = BitmapFactory.Options()
             bounds.inJustDecodeBounds = true
             resolver.openInputStream(uri).use { BitmapFactory.decodeStream(it, null, bounds) }
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+                // Not an image: an audio file opened from another app; use the cover embedded in it.
+                val bytes = embeddedPicture(uri) ?: throw IOException("No artwork: $uri")
+                val inner = BitmapFactory.Options()
+                inner.inJustDecodeBounds = true
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, inner)
+                return@Callable BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOptions(inner))
+                    ?: throw IOException("Undecodable artwork: $uri")
+            }
             val bitmap = resolver.openInputStream(uri).use {
                 BitmapFactory.decodeStream(it, null, decodeOptions(bounds))
             }
             if (bitmap == null) throw IOException("Undecodable artwork: $uri")
             bitmap
         })
+    }
+
+    private fun embeddedPicture(uri: Uri): ByteArray? {
+        val retriever = MediaMetadataRetriever()
+        return try {
+            resolver.openFileDescriptor(uri, "r")?.use { fd ->
+                retriever.setDataSource(fd.fileDescriptor)
+                retriever.embeddedPicture
+            }
+        } catch (e: Exception) {
+            null
+        } finally {
+            retriever.release()
+        }
     }
 
     companion object {

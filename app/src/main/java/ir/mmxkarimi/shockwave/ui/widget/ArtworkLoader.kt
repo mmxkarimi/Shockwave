@@ -5,6 +5,7 @@ import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -39,6 +40,10 @@ class ArtworkLoader private constructor(context: Context) {
     }
     private val main = Handler(Looper.getMainLooper())
 
+    /** URIs known to have no cover (main thread only), so list scrolling does not probe them again. */
+    private val noArt = HashSet<String>()
+    private val listeners = java.util.concurrent.CopyOnWriteArrayList<(String) -> Unit>()
+
     fun cached(uri: String, sizePx: Int): Bitmap? {
         return cache.get(key(uri, sizePx))
     }
@@ -52,23 +57,48 @@ class ArtworkLoader private constructor(context: Context) {
             callback.onLoaded(k, hit)
             return
         }
+        if (noArt.contains(uri)) {
+            callback.onLoaded(k, null)
+            return
+        }
         executor.execute {
             val bmp = decode(uri, sizePx)
             main.post {
-                if (bmp != null) cache.put(k, bmp)
+                if (bmp != null) cache.put(k, bmp) else noArt.add(uri)
                 callback.onLoaded(k, bmp)
             }
         }
     }
 
+    /**
+     * Forgets every cached size of [uri] (after its track was deleted or its file changed), so the next load decodes
+     * again instead of serving a stale cover.
+     */
+    @MainThread
+    fun evict(uri: String) {
+        val prefix = "$uri#"
+        for (k in cache.snapshot().keys) {
+            if (k.startsWith(prefix)) cache.remove(k)
+        }
+        noArt.remove(uri)
+        listeners.forEach { it(uri) }
+    }
+
+    /** Called with the uri on every [evict] (the widget drops its own rounded copy). */
+    fun addEvictionListener(listener: (String) -> Unit) {
+        listeners.add(listener)
+    }
+
     /** Drop everything (call from onTrimMemory at RUNNING_LOW or worse). */
     fun trim() {
         cache.evictAll()
+        noArt.clear()
     }
 
     private fun decode(uri: String, sizePx: Int): Bitmap? {
         return try {
             val u = Uri.parse(uri)
+            if (isAudioItem(uri)) return decodeEmbedded(u, sizePx)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 try {
                     val albumId = u.lastPathSegment?.toLongOrNull()
@@ -86,6 +116,8 @@ class ArtworkLoader private constructor(context: Context) {
             resolver.openInputStream(u)?.use { `in` ->
                 BitmapFactory.decodeStream(`in`, null, o)
             } ?: return null
+            // Not an image: an audio file opened from another app; use the cover embedded in it.
+            if (o.outWidth <= 0 || o.outHeight <= 0) return decodeEmbedded(u, sizePx)
 
             o.inSampleSize = sampleSize(o.outWidth, o.outHeight, sizePx)
             o.inJustDecodeBounds = false
@@ -100,6 +132,35 @@ class ArtworkLoader private constructor(context: Context) {
         }
     }
 
+    /**
+     * The cover embedded in one audio file: MediaStore's thumbnail of that item, else the raw picture tag. Never the
+     * album's shared thumbnail, which MediaStore builds from whichever file of the album it saw first.
+     */
+    private fun decodeEmbedded(u: Uri, sizePx: Int): Bitmap? {
+        try {
+            return resolver.loadThumbnail(u, Size(sizePx, sizePx), null)
+        } catch (ignored: Exception) {
+        }
+        val bytes = try {
+            val retriever = MediaMetadataRetriever()
+            try {
+                resolver.openFileDescriptor(u, "r")?.use { fd ->
+                    retriever.setDataSource(fd.fileDescriptor)
+                    retriever.embeddedPicture
+                }
+            } finally {
+                retriever.release()
+            }
+        } catch (e: Exception) {
+            null
+        } ?: return null
+        val o = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, o)
+        o.inSampleSize = sampleSize(o.outWidth, o.outHeight, sizePx)
+        o.inJustDecodeBounds = false
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, o)
+    }
+
     companion object {
         @Volatile
         private var instance: ArtworkLoader? = null
@@ -111,6 +172,10 @@ class ArtworkLoader private constructor(context: Context) {
                 instance ?: ArtworkLoader(context).also { instance = it }
             }
         }
+
+        /** `content://media/<volume>/audio/media/<id>`: a single track, whose own embedded cover is wanted. */
+        @JvmStatic
+        fun isAudioItem(uri: String): Boolean = uri.startsWith("content://media/") && uri.contains("/audio/media/")
 
         @JvmStatic
         fun key(uri: String, sizePx: Int): String {

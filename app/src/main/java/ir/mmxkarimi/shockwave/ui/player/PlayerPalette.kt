@@ -14,6 +14,9 @@ class PlayerPalette private constructor(hue: Float) {
     val onContainer: Int = ColorUtils.HSLToColor(floatArrayOf(hue, 0.90f, 0.90f))
     val glow: Int = ColorUtils.HSLToColor(floatArrayOf(hue, 0.60f, 0.42f))
     val deep: Int = ColorUtils.HSLToColor(floatArrayOf((hue + 20f) % 360f, 0.55f, 0.08f))
+    /** Pale tint and its text colour, for surfaces in the light theme (e.g. the mini player). */
+    val containerLight: Int = ColorUtils.HSLToColor(floatArrayOf(hue, 0.60f, 0.89f))
+    val onContainerLight: Int = ColorUtils.HSLToColor(floatArrayOf(hue, 0.70f, 0.14f))
 
     companion object {
         @JvmStatic

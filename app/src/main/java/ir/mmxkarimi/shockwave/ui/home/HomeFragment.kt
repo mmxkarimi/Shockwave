@@ -1,8 +1,6 @@
 package ir.mmxkarimi.shockwave.ui.home
 
 import android.os.Bundle
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -102,7 +101,7 @@ import java.text.NumberFormat
 import ir.mmxkarimi.shockwave.R
 import ir.mmxkarimi.shockwave.domain.model.Playlist
 import ir.mmxkarimi.shockwave.domain.model.Track
-import ir.mmxkarimi.shockwave.ui.components.TrackDeleteHelper
+import ir.mmxkarimi.shockwave.ui.components.rememberTrackDeleter
 import ir.mmxkarimi.shockwave.ui.components.TrackDetailsDialog
 import ir.mmxkarimi.shockwave.ui.library.AsyncArtworkImage
 import ir.mmxkarimi.shockwave.ui.library.LibraryViewModel
@@ -318,20 +317,10 @@ fun TracksPage(
     var sortMenuOpen by remember { mutableStateOf(false) }
     var trackActionTarget by remember { mutableStateOf<Track?>(null) }
     var trackToDelete by remember { mutableStateOf<Track?>(null) }
-    var pendingStorageTrack by remember { mutableStateOf<Track?>(null) }
     var trackForDetails by remember { mutableStateOf<Track?>(null) }
-    val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
     val player = remember { Screens.container(context).player }
 
-    val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val t = pendingStorageTrack
-            if (t != null) {
-                libraryAdmin.deleteTrack(t.id)
-                pendingStorageTrack = null
-            }
-        }
-    }
+    val trackDeleter = rememberTrackDeleter()
 
     // Id only: position ticks otherwise recompose the whole list every second.
     val currentTrackId by remember(player) {
@@ -372,11 +361,7 @@ fun TracksPage(
                     val t = trackToDelete
                     trackToDelete = null
                     if (t != null) {
-                        pendingStorageTrack = t
-                        TrackDeleteHelper.deleteTrack(context, t, deleteLauncher) {
-                            libraryAdmin.deleteTrack(t.id)
-                            pendingStorageTrack = null
-                        }
+                        trackDeleter.delete(t)
                     }
                 }) {
                     Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
@@ -406,43 +391,38 @@ fun TracksPage(
                 contentPadding = PaddingValues(top = 10.dp, bottom = 120.dp)
             ) {
                 item {
-                    Box {
-                        TracksHeader(
-                            sortLabel = sortLabel,
-                            onSortClick = { sortMenuOpen = true },
-                            onShuffleClick = {
-                                libVm.shuffle(sortedTracks, allTracksLabel)
-                            },
-                            onPlayAllClick = {
-                                if (sortedTracks.isNotEmpty()) {
-                                    libVm.play(sortedTracks, 0, allTracksLabel)
-                                }
+                    TracksHeader(
+                        sortLabel = sortLabel,
+                        onSortClick = { sortMenuOpen = true },
+                        onShuffleClick = {
+                            libVm.shuffle(sortedTracks, allTracksLabel)
+                        },
+                        onPlayAllClick = {
+                            if (sortedTracks.isNotEmpty()) {
+                                libVm.play(sortedTracks, 0, allTracksLabel)
                             }
+                        },
+                        sortMenuExpanded = sortMenuOpen,
+                        onSortMenuDismiss = { sortMenuOpen = false }
+                    ) {
+                        val sortOptions = listOf(
+                            0 to titleSortLabel,
+                            1 to artistSortLabel,
+                            2 to durationSortLabel,
+                            3 to dateAddedSortLabel
                         )
-
-                        DropdownMenu(
-                            expanded = sortMenuOpen,
-                            onDismissRequest = { sortMenuOpen = false }
-                        ) {
-                            val sortOptions = listOf(
-                                0 to titleSortLabel,
-                                1 to artistSortLabel,
-                                2 to durationSortLabel,
-                                3 to dateAddedSortLabel
+                        sortOptions.forEach { (mode, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    sortMode = mode
+                                    settingsStore.setTracksSortMode(mode)
+                                    sortMenuOpen = false
+                                },
+                                leadingIcon = if (sortMode == mode) {
+                                    { Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                                } else null
                             )
-                            sortOptions.forEach { (mode, label) ->
-                                DropdownMenuItem(
-                                    text = { Text(label) },
-                                    onClick = {
-                                        sortMode = mode
-                                        settingsStore.setTracksSortMode(mode)
-                                        sortMenuOpen = false
-                                    },
-                                    leadingIcon = if (sortMode == mode) {
-                                        { Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
-                                    } else null
-                                )
-                            }
                         }
                     }
                 }
@@ -550,10 +530,8 @@ fun FavoritesPage(
     val liked by libVm.getLiked().observeAsState(emptyList())
     var trackActionTarget by remember { mutableStateOf<Track?>(null) }
     var trackToDelete by remember { mutableStateOf<Track?>(null) }
-    var pendingStorageTrack by remember { mutableStateOf<Track?>(null) }
     var trackForDetails by remember { mutableStateOf<Track?>(null) }
     val context = LocalContext.current
-    val libraryAdmin = remember { Screens.container(context).libraryAdmin() }
     val player = remember { Screens.container(context).player }
 
     // Id only: position ticks otherwise recompose the whole list every second.
@@ -561,15 +539,7 @@ fun FavoritesPage(
         player.getState().map { it.currentTrack?.id }.distinctUntilChanged()
     }.observeAsState()
 
-    val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val t = pendingStorageTrack
-            if (t != null) {
-                libraryAdmin.deleteTrack(t.id)
-                pendingStorageTrack = null
-            }
-        }
-    }
+    val trackDeleter = rememberTrackDeleter()
 
     if (trackToDelete != null) {
         AlertDialog(
@@ -581,11 +551,7 @@ fun FavoritesPage(
                     val t = trackToDelete
                     trackToDelete = null
                     if (t != null) {
-                        pendingStorageTrack = t
-                        TrackDeleteHelper.deleteTrack(context, t, deleteLauncher) {
-                            libraryAdmin.deleteTrack(t.id)
-                            pendingStorageTrack = null
-                        }
+                        trackDeleter.delete(t)
                     }
                 }) {
                     Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
@@ -1173,7 +1139,10 @@ fun TracksHeader(
     sortLabel: String?,
     onSortClick: (() -> Unit)?,
     onShuffleClick: () -> Unit,
-    onPlayAllClick: () -> Unit
+    onPlayAllClick: () -> Unit,
+    sortMenuExpanded: Boolean = false,
+    onSortMenuDismiss: () -> Unit = {},
+    sortMenuContent: @Composable ColumnScope.() -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -1205,12 +1174,20 @@ fun TracksHeader(
         if (sortLabel != null && onSortClick != null) {
             // Pushes the sort menu to the trailing edge.
             Spacer(modifier = Modifier.weight(1f))
-            TextButton(onClick = onSortClick) {
-                Text(sortLabel, maxLines = 1)
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
+            // The menu lives in the button's own Box so it opens under the button, at the trailing edge.
+            Box {
+                TextButton(onClick = onSortClick) {
+                    Text(sortLabel, maxLines = 1)
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                DropdownMenu(
+                    expanded = sortMenuExpanded,
+                    onDismissRequest = onSortMenuDismiss,
+                    content = sortMenuContent
                 )
             }
         }

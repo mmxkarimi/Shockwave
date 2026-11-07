@@ -8,8 +8,6 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
@@ -143,7 +141,7 @@ import ir.mmxkarimi.shockwave.domain.model.Lyrics
 import ir.mmxkarimi.shockwave.domain.model.PlaybackState
 import ir.mmxkarimi.shockwave.domain.model.RepeatMode
 import ir.mmxkarimi.shockwave.domain.model.Track
-import ir.mmxkarimi.shockwave.ui.components.TrackDeleteHelper
+import ir.mmxkarimi.shockwave.ui.components.rememberTrackDeleter
 import ir.mmxkarimi.shockwave.ui.components.TrackDetailsDialog
 import ir.mmxkarimi.shockwave.ui.components.shareTrack
 import ir.mmxkarimi.shockwave.ui.nav.PlayerNavigator
@@ -331,18 +329,8 @@ fun FullPlayerScreen(
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     var showDetailsDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var pendingStorageTrack by remember { mutableStateOf<Track?>(null) }
 
-    val deleteLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val t = pendingStorageTrack
-            if (t != null) {
-                Screens.container(ctx).libraryAdmin().deleteTrack(t.id)
-                pendingStorageTrack = null
-                vm.next()
-            }
-        }
-    }
+    val trackDeleter = rememberTrackDeleter()
 
     // ---- swipe down to close + enter animation ----
     var dragY by remember { mutableFloatStateOf(0f) }
@@ -400,12 +388,7 @@ fun FullPlayerScreen(
                     TextButton(onClick = {
                         showDeleteDialog = false
                         val track = currentTrack
-                        pendingStorageTrack = track
-                        TrackDeleteHelper.deleteTrack(ctx, track, deleteLauncher) {
-                            Screens.container(ctx).libraryAdmin().deleteTrack(track.id())
-                            pendingStorageTrack = null
-                            vm.next()
-                        }
+                        trackDeleter.delete(track)
                     }) {
                         Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
                     }

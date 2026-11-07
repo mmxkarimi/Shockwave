@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Build
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -67,19 +68,24 @@ import ir.mmxkarimi.shockwave.ui.theme.LimeLightColorScheme
 object ShockwaveWidget : GlanceAppWidget() {
     private val COMPACT = DpSize(180.dp, 48.dp)
     private val SQUARE = DpSize(110.dp, 100.dp)
-    private val WIDE = DpSize(250.dp, 100.dp)
+    /** A 4x1 on launchers with tall cells (Samsung: about 116 dp): still one row, with a bigger cover. */
+    private val COMPACT_TALL = DpSize(250.dp, 100.dp)
+    private val WIDE = DpSize(250.dp, WIDE_MIN_HEIGHT_DP.dp)
 
-    override val sizeMode: SizeMode = SizeMode.Responsive(setOf(COMPACT, SQUARE, WIDE))
+    override val sizeMode: SizeMode = SizeMode.Responsive(setOf(COMPACT, SQUARE, COMPACT_TALL, WIDE))
 
     private val fallbackColors by lazy { ColorProviders(light = LimeLightColorScheme, dark = LimeDarkColorScheme) }
     private val blackColors by lazy { ColorProviders(light = LimeLightColorScheme, dark = LimeBlackColorScheme) }
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val snapshot = WidgetSnapshotReader.read(context)
+        // Fresh state for a new session; later changes arrive through WidgetState (see ShockwaveWidgetUpdater).
+        val initial = WidgetSnapshotReader.read(context)
+        WidgetState.snapshot.value = initial
         val settings = PrefsSettingsStore(context)
         val black = settings.getTheme() == SettingsStore.Theme.BLACK
         val dynamic = settings.isDynamicColor() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !black
         provideContent {
+            val snapshot = WidgetState.snapshot.collectAsState().value ?: initial
             val colors = when {
                 dynamic -> GlanceTheme.colors
                 black -> blackColors
@@ -88,6 +94,21 @@ object ShockwaveWidget : GlanceAppWidget() {
             GlanceTheme(colors = colors) { WidgetContent(snapshot) }
         }
     }
+}
+
+/** Below this height the wide layout (cover, texts, progress, controls stacked) does not fit and gets squeezed. */
+internal const val WIDE_MIN_HEIGHT_DP = 140f
+
+internal enum class WidgetLayout { COMPACT, SQUARE, WIDE }
+
+/**
+ * Picks the layout for a widget of [widthDp] x [heightDp]. A 4x1 widget on launchers with tall cells is about
+ * 116 dp high: that must stay a single row (compact), because the wide layout needs about 135 dp.
+ */
+internal fun widgetLayoutFor(widthDp: Float, heightDp: Float): WidgetLayout = when {
+    widthDp >= 250f && heightDp >= WIDE_MIN_HEIGHT_DP -> WidgetLayout.WIDE
+    widthDp < 250f && heightDp >= 100f -> WidgetLayout.SQUARE
+    else -> WidgetLayout.COMPACT
 }
 
 /** Progress bitmap size in pixels; the image is stretched to the bar's width and height. */
@@ -110,29 +131,36 @@ private fun WidgetContent(s: WidgetSnapshot) {
             contentScale = ContentScale.FillBounds,
             colorFilter = ColorFilter.tint(GlanceTheme.colors.surface)
         )
-        when {
-            size.height >= 100.dp && size.width >= 250.dp -> WideLayout(s)
-            size.height >= 100.dp -> SquareLayout(s)
-            else -> CompactLayout(s)
+        when (widgetLayoutFor(size.width.value, size.height.value)) {
+            WidgetLayout.WIDE -> WideLayout(s)
+            WidgetLayout.SQUARE -> SquareLayout(s)
+            WidgetLayout.COMPACT -> CompactLayout(s, tall = size.height >= 100.dp)
         }
     }
 }
 
 // ---------------------------------------------------------------- layouts
 
+/** One row: cover, texts, controls. [tall] (a 4x1 with tall cells) gets a bigger cover, text and buttons. */
 @Composable
-private fun CompactLayout(s: WidgetSnapshot) {
-    Row(GlanceModifier.fillMaxSize().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Cover(s, GlanceModifier.size(44.dp).clickable(openApp()), 44.dp)
+private fun CompactLayout(s: WidgetSnapshot, tall: Boolean) {
+    val cover = if (tall) 72.dp else 44.dp
+    val skip = if (tall) 40.dp else 36.dp
+    val play = if (tall) 48.dp else 40.dp
+    Row(
+        GlanceModifier.fillMaxSize().padding(if (tall) 12.dp else 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Cover(s, GlanceModifier.size(cover).clickable(openApp()), cover)
         Column(
             modifier = GlanceModifier.defaultWeight().padding(start = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TrackTexts(s, titleSp = 15, artistSp = 12)
+            TrackTexts(s, titleSp = if (tall) 16 else 15, artistSp = if (tall) 13 else 12)
         }
-        SkipButton(R.drawable.widget_ic_prev, R.string.mp_cd_previous, 36.dp, actionRunCallback<PreviousAction>())
-        PlayButton(s.playing, 40.dp)
-        SkipButton(R.drawable.widget_ic_next, R.string.mp_cd_next, 36.dp, actionRunCallback<NextAction>())
+        SkipButton(R.drawable.widget_ic_prev, R.string.mp_cd_previous, skip, actionRunCallback<PreviousAction>())
+        PlayButton(s.playing, play)
+        SkipButton(R.drawable.widget_ic_next, R.string.mp_cd_next, skip, actionRunCallback<NextAction>())
     }
 }
 
@@ -306,7 +334,8 @@ private fun PlayButton(playing: Boolean, size: Dp) {
         Image(
             provider = ImageProvider(R.drawable.widget_shape_oval),
             contentDescription = null,
-            modifier = GlanceModifier.fillMaxSize(),
+            // An explicit square, never fillMaxSize: a squeezed parent must not stretch the circle into an oval.
+            modifier = GlanceModifier.size(size),
             contentScale = ContentScale.FillBounds,
             colorFilter = ColorFilter.tint(GlanceTheme.colors.primary)
         )
