@@ -1,5 +1,9 @@
 package ir.mmxkarimi.shockwave.ui.components
 
+import ir.mmxkarimi.shockwave.ui.player.PlayerPalette
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -374,9 +378,30 @@ fun MiniPlayerBar(
     onClick: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Artwork colours (as in the full player); null keeps the theme colours. */
+    palette: PlayerPalette? = null
 ) {
     if (track == null) return
+
+    // Same roles as PlayerFragment: tinted surface, palette play button and progress; animated between tracks.
+    val scheme = MaterialTheme.colorScheme
+    val dark = scheme.surface.luminance() < 0.5f
+    val bgTarget = palette?.let { Color(if (dark) it.container else it.containerLight) } ?: scheme.surfaceContainerHigh
+    val textTarget = palette?.let { Color(if (dark) it.onContainer else it.onContainerLight) } ?: scheme.onSurface
+    val subTarget = if (palette != null) textTarget.copy(alpha = 0.75f) else scheme.onSurfaceVariant
+    val accentTarget = palette?.let { Color(if (dark) it.primary else it.glow) } ?: scheme.primary
+    val onAccentTarget = palette?.let { if (dark) Color(it.onPrimary) else Color.White } ?: scheme.onPrimary
+    val trackTarget = if (palette != null) textTarget.copy(alpha = 0.18f) else scheme.surfaceContainerHighest
+    val borderTarget = if (palette != null) textTarget.copy(alpha = 0.12f) else scheme.outlineVariant.copy(alpha = 0.35f)
+    val colorSpec = tween<Color>(durationMillis = 450)
+    val bg by animateColorAsState(bgTarget, colorSpec, label = "mini_bg")
+    val textColor by animateColorAsState(textTarget, colorSpec, label = "mini_text")
+    val subColor by animateColorAsState(subTarget, colorSpec, label = "mini_sub")
+    val accent by animateColorAsState(accentTarget, colorSpec, label = "mini_accent")
+    val onAccent by animateColorAsState(onAccentTarget, colorSpec, label = "mini_on_accent")
+    val progressTrack by animateColorAsState(trackTarget, colorSpec, label = "mini_track")
+    val borderColor by animateColorAsState(borderTarget, colorSpec, label = "mini_border")
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -394,9 +419,9 @@ fun MiniPlayerBar(
             .clip(RoundedCornerShape(28.dp))
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
         shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 8.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+        color = bg,
+        tonalElevation = if (palette != null) 0.dp else 8.dp, // tonal overlay would wash out the artwork tint
+        border = BorderStroke(1.dp, borderColor)
     ) {
         Column {
             Row(
@@ -422,11 +447,11 @@ fun MiniPlayerBar(
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = textColor
                     )
                     Text(
                         text = track.artistName,
-                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                        style = MaterialTheme.typography.bodySmall.copy(color = subColor),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -436,14 +461,14 @@ fun MiniPlayerBar(
                 Surface(
                     onClick = onPlayPause,
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = accent,
                     modifier = Modifier.size(38.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = if (isPlaying) "Pause" else "Play",
-                            tint = MaterialTheme.colorScheme.onPrimary,
+                            tint = onAccent,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -459,7 +484,7 @@ fun MiniPlayerBar(
                     Icon(
                         imageVector = Icons.Default.SkipNext,
                         contentDescription = "Next",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = subColor
                     )
                 }
             }
@@ -469,13 +494,13 @@ fun MiniPlayerBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(2.5.dp)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .background(progressTrack)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(progressFraction.coerceIn(0f, 1f))
                         .height(2.5.dp)
-                        .background(MaterialTheme.colorScheme.primary)
+                        .background(accent)
                 )
             }
         }

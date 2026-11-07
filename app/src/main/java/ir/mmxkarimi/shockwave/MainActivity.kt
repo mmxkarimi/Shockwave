@@ -48,6 +48,7 @@ import ir.mmxkarimi.shockwave.ui.nav.ScreenNavigator.TrackList
 import ir.mmxkarimi.shockwave.ui.nav.ShellViewModel
 import ir.mmxkarimi.shockwave.ui.player.PlayerFormat
 import ir.mmxkarimi.shockwave.ui.player.PlayerFragment
+import ir.mmxkarimi.shockwave.ui.player.rememberArtworkPalette
 import ir.mmxkarimi.shockwave.ui.queue.QueueFragment
 import ir.mmxkarimi.shockwave.ui.search.SearchFragment
 import ir.mmxkarimi.shockwave.ui.settings.PrefsSettingsStore
@@ -170,6 +171,8 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                         currentMode != ThemeMode.BLACK
                 val effectiveAccent = if (artworkColors && !materialYou) accent else null
+                // Like the full player: the mini player takes the cover's colours whenever "artwork colours" is on.
+                val miniPalette = rememberArtworkPalette(track, artworkColors)
                 ShockwaveTheme(mode = currentMode, accentScheme = effectiveAccent) {
                     Box(
                         modifier = Modifier
@@ -182,6 +185,7 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                                 track = track,
                                 isPlaying = playback?.playing == true,
                                 progressFraction = progressFraction,
+                                palette = miniPalette,
                                 onClick = {
                                     if (playback?.currentTrack == null) {
                                         (application as ShockwaveApp).getContainer().player.play(
