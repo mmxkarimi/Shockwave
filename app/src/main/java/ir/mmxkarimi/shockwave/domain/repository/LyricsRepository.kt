@@ -11,4 +11,10 @@ interface LyricsRepository {
      * [Lyrics.none] when nothing was found.
      */
     fun lyricsFor(track: Track): LiveData<Lyrics>
+
+    /**
+     * Like [lyricsFor], but tracks remembered as "no lyrics found" are looked up online again instead of being
+     * answered from the cache. For the explicit "download all lyrics" action.
+     */
+    fun refresh(track: Track): LiveData<Lyrics> = lyricsFor(track)
 }

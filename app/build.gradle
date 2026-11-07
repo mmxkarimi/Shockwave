@@ -17,8 +17,8 @@ android {
         applicationId 'ir.mmxkarimi.shockwave'
         minSdk 29
         targetSdk 37
-        versionCode = 17
-        versionName = "1.1.4"
+        versionCode = 18
+        versionName = "1.1.5"
     }
 
     signingConfigs {
@@ -72,6 +72,7 @@ kotlin {
 }
 
 dependencies {
+    testImplementation libs.junit
     implementation libs.androidx.appcompat
     implementation libs.androidx.core
     implementation libs.androidx.activity

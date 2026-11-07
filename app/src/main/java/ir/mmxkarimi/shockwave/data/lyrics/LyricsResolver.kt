@@ -34,8 +34,13 @@ class LyricsResolver(
     constructor(local: List<LyricsSource>, remote: LyricsSource, cache: LyricsCacheStore, clock: LongSupplier) :
         this(local, remote, cache, clock, BooleanSupplier { true })
 
-    /** @return the lyrics or [Lyrics.none]; null if `cancel` fired */
-    fun resolve(track: Track, cancel: CancelToken): Lyrics? {
+    /**
+     * @param bypassMissCache ignore cached "not found" / failure entries and ask the remote source again (the user's
+     *   explicit "download all lyrics"); cached lyrics are still reused
+     * @return the lyrics or [Lyrics.none]; null if `cancel` fired
+     */
+    @JvmOverloads
+    fun resolve(track: Track, cancel: CancelToken, bypassMissCache: Boolean = false): Lyrics? {
         var plainFallback: Lyrics? = null
         for (source in local) {
             if (cancel.isCancelled()) return null
@@ -44,16 +49,16 @@ class LyricsResolver(
             if (plainFallback == null) plainFallback = found
         }
         if (cancel.isCancelled()) return null
-        val fromRemote = viaCache(track, cancel)
+        val fromRemote = viaCache(track, cancel, bypassMissCache)
         if (cancel.isCancelled()) return null
         if (fromRemote != null && (fromRemote.synced || plainFallback == null)) return fromRemote
         return plainFallback ?: Lyrics.none(track.id)
     }
 
-    private fun viaCache(track: Track, cancel: CancelToken): Lyrics? {
+    private fun viaCache(track: Track, cancel: CancelToken, bypassMissCache: Boolean): Lyrics? {
         val now = clock.getAsLong()
         val cached = cache.get(track.id)
-        if (cached != null && cached.expiresAtMs > now) {
+        if (cached != null && cached.expiresAtMs > now && !(bypassMissCache && cached.text == null)) {
             return if (cached.text == null) null else LrcParser.toLyrics(track.id, cached.text, cached.source)
         }
         if (!remoteEnabled.getAsBoolean()) return null

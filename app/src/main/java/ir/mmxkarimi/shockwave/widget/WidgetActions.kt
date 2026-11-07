@@ -35,14 +35,14 @@ class PlayPauseAction : ActionCallback {
                 (player.playWhenReady && player.playbackState == Player.STATE_BUFFERING)
             if (playing) player.pause() else player.play()
         }
-        ShockwaveWidget.update(context, glanceId)
+        ShockwaveWidgetUpdater.request(context)
     }
 }
 
 class NextAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         withPlayer(context) { player -> if (player.hasNextMediaItem()) player.seekToNextMediaItem() }
-        ShockwaveWidget.update(context, glanceId)
+        ShockwaveWidgetUpdater.request(context)
     }
 }
 
@@ -50,6 +50,6 @@ class PreviousAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         // Restarts the track when more than a few seconds in, otherwise goes to the previous item.
         withPlayer(context) { player -> player.seekToPrevious() }
-        ShockwaveWidget.update(context, glanceId)
+        ShockwaveWidgetUpdater.request(context)
     }
 }

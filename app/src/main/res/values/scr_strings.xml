@@ -108,7 +108,9 @@
     <string name="settings_equalizer_not_found">No system equalizer found on this device</string>
     <string name="library_menu_delete_track">Delete track</string>
     <string name="library_delete_track_title">Delete track?</string>
-    <string name="library_delete_track_message">Are you sure you want to remove this track from your library?</string>
+    <string name="library_delete_track_message">This permanently deletes the audio file from your device.</string>
+    <string name="delete_track_failed">Couldn\'t delete the file. The track was kept.</string>
+    <string name="delete_track_permission_denied">Storage permission is needed to delete files.</string>
     <string name="library_delete_playlist_title">Delete playlist?</string>
     <string name="library_delete_playlist_message">Are you sure you want to delete “%1$s”?</string>
     <string name="action_delete">Delete</string>
@@ -166,4 +168,5 @@
     <string name="downloading_lyrics_progress">%1$s / %2$s</string>
     <string name="downloading_lyrics_complete">Downloaded %1$d new lyrics (%2$d already cached, %3$d not found)</string>
     <string name="downloading_lyrics_no_tracks">No tracks found in library</string>
+    <string name="downloading_lyrics_offline">Turn on online lyrics to download them.</string>
 </resources>

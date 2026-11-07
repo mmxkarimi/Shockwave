@@ -23,12 +23,16 @@ data class ScannedAudio(
     @get:JvmName("path") val path: String?,
 ) {
 
+    /**
+     * The cover is the track's own embedded picture (`audio/media/<id>`), not MediaStore's album thumbnail: Android
+     * groups untagged files of one folder into one "album", and that thumbnail goes stale when its source is deleted.
+     */
     fun toTrack(): Track {
         val albumKey = albumId.toString()
         return Track(
             id.toString(), titleOrFileName(), artistId.toString(),
             known(artist, "Unknown artist"), albumKey, known(album, "Unknown album"), durationMs,
-            if (albumId > 0) ALBUM_ART_URI + albumId else null, Seeds.of(albumKey), AUDIO_URI + id,
+            AUDIO_URI + id, Seeds.of(albumKey), AUDIO_URI + id,
             false, false, year, trackNumber, addedAtMs,
         )
     }
@@ -44,7 +48,6 @@ data class ScannedAudio(
         /** MediaStore's placeholder for missing tags. */
         private const val UNKNOWN = "<unknown>"
         private const val AUDIO_URI = "content://media/external/audio/media/"
-        private const val ALBUM_ART_URI = "content://media/external/audio/albumart/"
 
         @JvmStatic private fun known(value: String?, fallback: String): String =
             if (value == null || value.trim().isEmpty() || UNKNOWN == value) fallback else value.trim()

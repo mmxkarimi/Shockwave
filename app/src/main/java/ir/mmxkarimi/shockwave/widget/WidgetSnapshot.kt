@@ -37,11 +37,24 @@ internal object WidgetSnapshotReader {
 
     private var cachedUri: String? = null
     private var cachedBitmap: Bitmap? = null
+    private var evictionHooked = false // main thread only
 
     suspend fun read(context: Context): WidgetSnapshot {
         val app = context.applicationContext
         // The player lives on the main thread.
         val raw = withContext(Dispatchers.Main) {
+            if (!evictionHooked) {
+                evictionHooked = true
+                // A deleted or changed track: drop the rounded copy too, not only the loader's bitmap.
+                ArtworkLoader.get(app).addEvictionListener { uri ->
+                    synchronized(this@WidgetSnapshotReader) {
+                        if (cachedUri == uri) {
+                            cachedUri = null
+                            cachedBitmap = null
+                        }
+                    }
+                }
+            }
             val player = PlayerHolder.get(app)
             val metadata = player.mediaMetadata
             val has = player.mediaItemCount > 0 && player.currentMediaItem != null
