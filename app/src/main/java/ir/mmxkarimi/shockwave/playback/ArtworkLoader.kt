@@ -85,6 +85,15 @@ internal class ArtworkLoader(context: Context) : BitmapLoader {
             val bounds = BitmapFactory.Options()
             bounds.inJustDecodeBounds = true
             resolver.openInputStream(uri).use { BitmapFactory.decodeStream(it, null, bounds) }
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+                // Not an image: an audio file opened from another app; use the cover embedded in it.
+                val bytes = embeddedPicture(uri) ?: throw IOException("No artwork: $uri")
+                val inner = BitmapFactory.Options()
+                inner.inJustDecodeBounds = true
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, inner)
+                return@Callable BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOptions(inner))
+                    ?: throw IOException("Undecodable artwork: $uri")
+            }
             val bitmap = resolver.openInputStream(uri).use {
                 BitmapFactory.decodeStream(it, null, decodeOptions(bounds))
             }

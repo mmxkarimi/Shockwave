@@ -40,7 +40,7 @@ class ArtworkLoader private constructor(context: Context) {
     }
     private val main = Handler(Looper.getMainLooper())
 
-    /** Tracks known to have no embedded cover (main thread only), so list scrolling does not probe them again. */
+    /** URIs known to have no cover (main thread only), so list scrolling does not probe them again. */
     private val noArt = HashSet<String>()
     private val listeners = java.util.concurrent.CopyOnWriteArrayList<(String) -> Unit>()
 
@@ -64,7 +64,7 @@ class ArtworkLoader private constructor(context: Context) {
         executor.execute {
             val bmp = decode(uri, sizePx)
             main.post {
-                if (bmp != null) cache.put(k, bmp) else if (isAudioItem(uri)) noArt.add(uri)
+                if (bmp != null) cache.put(k, bmp) else noArt.add(uri)
                 callback.onLoaded(k, bmp)
             }
         }
@@ -116,6 +116,8 @@ class ArtworkLoader private constructor(context: Context) {
             resolver.openInputStream(u)?.use { `in` ->
                 BitmapFactory.decodeStream(`in`, null, o)
             } ?: return null
+            // Not an image: an audio file opened from another app; use the cover embedded in it.
+            if (o.outWidth <= 0 || o.outHeight <= 0) return decodeEmbedded(u, sizePx)
 
             o.inSampleSize = sampleSize(o.outWidth, o.outHeight, sizePx)
             o.inJustDecodeBounds = false

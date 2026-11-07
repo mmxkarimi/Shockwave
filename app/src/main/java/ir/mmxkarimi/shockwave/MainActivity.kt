@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +26,11 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import ir.mmxkarimi.shockwave.playback.ExternalAudio
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ir.mmxkarimi.shockwave.databinding.ActivityMainBinding
 import ir.mmxkarimi.shockwave.domain.model.Track
 import ir.mmxkarimi.shockwave.ui.components.MiniPlayerBar
@@ -123,6 +129,9 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.screen_container, PermissionFragment()).commit()
             }
+            // A file handed over by another app plays even before library access is granted: the sender's
+            // URI grant is all it needs.
+            openExternalAudio(intent)
         } else {
             permissionFlow = !AudioPermission.granted(this) && savedInstanceState.getBoolean(STATE_PERMISSION)
             val tabOrd = savedInstanceState.getInt(STATE_TAB, 0)
@@ -216,7 +225,28 @@ class MainActivity : AppCompatActivity(), PlayerNavigator, ScreenNavigator, Perm
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        applyShortcut(intent)
+        if (!openExternalAudio(intent)) applyShortcut(intent)
+    }
+
+    /** Plays an audio file opened from another app ("Open with Shockwave") and shows the full player. */
+    private fun openExternalAudio(intent: Intent?): Boolean {
+        if (!ExternalAudio.isPlayIntent(intent)) return false
+        val uri = intent!!.data!!
+        // Consumed: a recreated activity must not start the file again.
+        intent.action = null
+        intent.data = null
+        lifecycleScope.launch {
+            val track = withContext(Dispatchers.IO) { ExternalAudio.resolve(applicationContext, uri) }
+            if (track == null) {
+                Toast.makeText(this@MainActivity, R.string.external_open_failed, Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            (application as ShockwaveApp).getContainer().player.play(
+                listOf(track), 0, getString(R.string.playing_from_file)
+            )
+            if (!supportFragmentManager.isStateSaved) openFullPlayer()
+        }
+        return true
     }
 
     private fun applyShortcut(intent: Intent?): Boolean {

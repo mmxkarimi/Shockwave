@@ -169,4 +169,6 @@
     <string name="downloading_lyrics_complete">Downloaded %1$d new lyrics (%2$d already cached, %3$d not found)</string>
     <string name="downloading_lyrics_no_tracks">No tracks found in library</string>
     <string name="downloading_lyrics_offline">Turn on online lyrics to download them.</string>
+    <string name="playing_from_file">Files</string>
+    <string name="external_open_failed">Couldn\'t open this audio file.</string>
 </resources>
